@@ -161,137 +161,137 @@ else:
         st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'> Login by : {users[st.session_state.username]['name']}</div>", unsafe_allow_html=True)
 
         # Load data frames
-if 'df' not in st.session_state:
-    st.session_state.df = df_Material = pd.read_csv('matril.csv')
-try:
-    df_BIN = pd.read_csv('LOCATION.csv')
-except FileNotFoundError:
-    df_BIN = pd.DataFrame(columns=['Product Name', 'Item Code', 'Batch Number', "Warehouse Operator",
-                                'Quantity', 'Date', 'BIN1', 'QTY1', 'BIN2', 'QTY2', 'BIN3', 'QTY3'])
-
-try:
-    df_Receving = pd.read_csv('Receving.csv')
-except FileNotFoundError:
-    df_Receving = pd.DataFrame(columns=['Product Name', "Batch No", "QTY pack", "Date", "Delivered by", "Received by", "Remark"])
-
-try:
-    logs_df = pd.read_csv('logs_location.csv')
-    st.session_state.logs_location = logs_df.to_dict('records')
-except FileNotFoundError:
-    st.session_state.logs_location = []
-
-try:
-    logs_df = pd.read_csv('logs_receving.csv')
-    st.session_state.logs_receving = logs_df.to_dict('records')
-except FileNotFoundError:
-    st.session_state.logs_receving = []
-
-# Display options
-page = st.sidebar.radio("Select page", [ "Add New Batch","Add New Location", "Logs"])
-
-if page == 'Add New Batch':
-    def main():
-        df_Material = pd.read_csv('matril.csv')
-        col1, col2 = st.columns([2, 0.75])
-        with col1:
-            st.markdown("""
-                <h2 style='text-align: center; font-size: 40px; color: black;'>
-                    Add New Batch
-                </h2>
-            """, unsafe_allow_html=True)
-        col1, col2, col3, col4, col5, col6 = st.columns([3, 2, 1.5, 1.5, 1.5, 1.5])
-        with col1:
-            Product_Name = st.selectbox('Product Name', df_Material['Item Name'].dropna().values)
-            Warehouse_Operator = st.text_input('Warehouse Operator:')
-        with col2:
-            Batch_No = st.text_input('Batch No:')
-            Date = st.date_input('Date:')
-        with col3:
-            QTY_pack = st.text_input('QTY pack:')
-        with col4:
-            Delivered_by = st.text_input('Delivered by:')
-        with col5:
-            Received_by = st.text_input('Received by:')
-        with col6:
-            Remark = st.text_input('Remark:')
-
-        if st.button("Add Batch"):
-            add_new_Batch(st.session_state.username, Product_Name, Batch_No, QTY_pack, Date, Delivered_by, Received_by, Remark)
-            st.write('## Updated Items')
-            st.dataframe(df_Receving)
-        csv = df_Receving.to_csv(index=False)
-        st.download_button(label="Download updated sheet", data=csv, file_name='updated_spare_parts.csv', mime='text/csv')
-    
-
-    if __name__ == '__main__':
-        main()
-
-
-elif page == "Add New Location":
-    def main():
-        col1, col2 = st.columns([2, 0.75])
-        with col1:
-            st.markdown("""
-                <h2 style='text-align: center; font-size: 40px; color: black;'>
-                    Add New Location
-                </h2>
-            """, unsafe_allow_html=True)
-        col1, col2, col3, col4, col5 = st.columns([2.5, 1.5, 1.5, 1.5, 1.5])
-        with col1:
-            Product_Name = st.selectbox('Product Name', df_Material['Item Name'].dropna().values)
-            Item_Code = st.text_input('Item Code:')
-            Warehouse_Operator = st.text_input('Warehouse Operator:')
-        with col2:
-            Batch_Number = st.text_input('Batch Number:')
-            Quantity = st.text_input('Quantity:')
-            Date = st.date_input('Date:')
-        with col3:
-            BIN1 = st.text_input('BIN1:')
-            QTY1 = st.number_input('QTY1:',min_value=0)
-        with col4:
-            BIN2 = st.text_input('BIN2:')
-            QTY2 = st.number_input('QTY2:',min_value=0)
-        with col5:
-            BIN3 = st.text_input('BIN3:')
-            QTY3 = st.number_input('QTY3:',min_value=0)
-        if st.button("Add Location"):
-            row_index = len(df_BIN)
-            add_new_LOCATION(row_index, Product_Name, Item_Code, Batch_Number, Warehouse_Operator, Quantity, Date, BIN1, QTY1, BIN2, QTY2, BIN3, QTY3, st.session_state.username)
-            st.write('## Updated Items')
-            st.dataframe(df_BIN)
-        csv = df_BIN.to_csv(index=False)
-        st.download_button(label="Download updated sheet", data=csv, file_name='updated_spare_parts.csv', mime='text/csv')
-    
-
-    if __name__ == '__main__':
-        main()
-
-elif page == "Logs":
-    def main():
+        if 'df' not in st.session_state:
+            st.session_state.df = df_Material = pd.read_csv('matril.csv')
+        try:
+            df_BIN = pd.read_csv('LOCATION.csv')
+        except FileNotFoundError:
+            df_BIN = pd.DataFrame(columns=['Product Name', 'Item Code', 'Batch Number', "Warehouse Operator",
+                                        'Quantity', 'Date', 'BIN1', 'QTY1', 'BIN2', 'QTY2', 'BIN3', 'QTY3'])
         
-        col1, col2 = st.columns([2, 0.75])
-        with col1:
-            st.markdown("""
-                <h2 style='text-align: center; font-size: 40px; color: black;'>
-                    View Logs
-                </h2>
-            """, unsafe_allow_html=True)
-        st.subheader("receving Logs")
-        if st.session_state.logs_receving:
-            logs_df = pd.DataFrame(st.session_state.logs_receving)
-            st.dataframe(logs_df)
-            csv = logs_df.to_csv(index=False)
-            st.download_button(label="Download Logs as sheet", data=csv, file_name='user_logs_receving.csv', mime='text/csv')
-        else:
-            st.write("No receving logs available.")
-
-        st.subheader("Location Logs")
-        if st.session_state.logs_location:
-            logs_df = pd.DataFrame(st.session_state.logs_location)
-            st.dataframe(logs_df)
-            csv = logs_df.to_csv(index=False)
-            st.download_button(label="Download Logs as CSV", data=csv, file_name='location_logs.csv', mime='text/csv')
-        else:
-            st.write("No location logs available.")
-    if __name__ == '__main__':
-        main()
+        try:
+            df_Receving = pd.read_csv('Receving.csv')
+        except FileNotFoundError:
+            df_Receving = pd.DataFrame(columns=['Product Name', "Batch No", "QTY pack", "Date", "Delivered by", "Received by", "Remark"])
+        
+        try:
+            logs_df = pd.read_csv('logs_location.csv')
+            st.session_state.logs_location = logs_df.to_dict('records')
+        except FileNotFoundError:
+            st.session_state.logs_location = []
+        
+        try:
+            logs_df = pd.read_csv('logs_receving.csv')
+            st.session_state.logs_receving = logs_df.to_dict('records')
+        except FileNotFoundError:
+            st.session_state.logs_receving = []
+        
+        # Display options
+        page = st.sidebar.radio("Select page", [ "Add New Batch","Add New Location", "Logs"])
+        
+        if page == 'Add New Batch':
+            def main():
+                df_Material = pd.read_csv('matril.csv')
+                col1, col2 = st.columns([2, 0.75])
+                with col1:
+                    st.markdown("""
+                        <h2 style='text-align: center; font-size: 40px; color: black;'>
+                            Add New Batch
+                        </h2>
+                    """, unsafe_allow_html=True)
+                col1, col2, col3, col4, col5, col6 = st.columns([3, 2, 1.5, 1.5, 1.5, 1.5])
+                with col1:
+                    Product_Name = st.selectbox('Product Name', df_Material['Item Name'].dropna().values)
+                    Warehouse_Operator = st.text_input('Warehouse Operator:')
+                with col2:
+                    Batch_No = st.text_input('Batch No:')
+                    Date = st.date_input('Date:')
+                with col3:
+                    QTY_pack = st.text_input('QTY pack:')
+                with col4:
+                    Delivered_by = st.text_input('Delivered by:')
+                with col5:
+                    Received_by = st.text_input('Received by:')
+                with col6:
+                    Remark = st.text_input('Remark:')
+        
+                if st.button("Add Batch"):
+                    add_new_Batch(st.session_state.username, Product_Name, Batch_No, QTY_pack, Date, Delivered_by, Received_by, Remark)
+                    st.write('## Updated Items')
+                    st.dataframe(df_Receving)
+                csv = df_Receving.to_csv(index=False)
+                st.download_button(label="Download updated sheet", data=csv, file_name='updated_spare_parts.csv', mime='text/csv')
+            
+        
+            if __name__ == '__main__':
+                main()
+        
+        
+        elif page == "Add New Location":
+            def main():
+                col1, col2 = st.columns([2, 0.75])
+                with col1:
+                    st.markdown("""
+                        <h2 style='text-align: center; font-size: 40px; color: black;'>
+                            Add New Location
+                        </h2>
+                    """, unsafe_allow_html=True)
+                col1, col2, col3, col4, col5 = st.columns([2.5, 1.5, 1.5, 1.5, 1.5])
+                with col1:
+                    Product_Name = st.selectbox('Product Name', df_Material['Item Name'].dropna().values)
+                    Item_Code = st.text_input('Item Code:')
+                    Warehouse_Operator = st.text_input('Warehouse Operator:')
+                with col2:
+                    Batch_Number = st.text_input('Batch Number:')
+                    Quantity = st.text_input('Quantity:')
+                    Date = st.date_input('Date:')
+                with col3:
+                    BIN1 = st.text_input('BIN1:')
+                    QTY1 = st.number_input('QTY1:',min_value=0)
+                with col4:
+                    BIN2 = st.text_input('BIN2:')
+                    QTY2 = st.number_input('QTY2:',min_value=0)
+                with col5:
+                    BIN3 = st.text_input('BIN3:')
+                    QTY3 = st.number_input('QTY3:',min_value=0)
+                if st.button("Add Location"):
+                    row_index = len(df_BIN)
+                    add_new_LOCATION(row_index, Product_Name, Item_Code, Batch_Number, Warehouse_Operator, Quantity, Date, BIN1, QTY1, BIN2, QTY2, BIN3, QTY3, st.session_state.username)
+                    st.write('## Updated Items')
+                    st.dataframe(df_BIN)
+                csv = df_BIN.to_csv(index=False)
+                st.download_button(label="Download updated sheet", data=csv, file_name='updated_spare_parts.csv', mime='text/csv')
+            
+        
+            if __name__ == '__main__':
+                main()
+        
+        elif page == "Logs":
+            def main():
+                
+                col1, col2 = st.columns([2, 0.75])
+                with col1:
+                    st.markdown("""
+                        <h2 style='text-align: center; font-size: 40px; color: black;'>
+                            View Logs
+                        </h2>
+                    """, unsafe_allow_html=True)
+                st.subheader("receving Logs")
+                if st.session_state.logs_receving:
+                    logs_df = pd.DataFrame(st.session_state.logs_receving)
+                    st.dataframe(logs_df)
+                    csv = logs_df.to_csv(index=False)
+                    st.download_button(label="Download Logs as sheet", data=csv, file_name='user_logs_receving.csv', mime='text/csv')
+                else:
+                    st.write("No receving logs available.")
+        
+                st.subheader("Location Logs")
+                if st.session_state.logs_location:
+                    logs_df = pd.DataFrame(st.session_state.logs_location)
+                    st.dataframe(logs_df)
+                    csv = logs_df.to_csv(index=False)
+                    st.download_button(label="Download Logs as CSV", data=csv, file_name='location_logs.csv', mime='text/csv')
+                else:
+                    st.write("No location logs available.")
+            if __name__ == '__main__':
+                main()
