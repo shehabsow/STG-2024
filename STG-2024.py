@@ -201,7 +201,7 @@ else:
                 """, unsafe_allow_html=True)
             col1, col2, col3, col4, col5, col6 = st.columns([3, 2, 1.5, 1.5, 1.5, 1.5])
             with col1:
-                Product_Name = st.selectbox('Product Name', df_Material['Material Description'].dropna().values)
+                Product_Name = st.selectbox('Product Name', df_Material['Item Name'].dropna().values)
                 Warehouse_Operator = st.text_input('Warehouse Operator:')
             with col2:
                 Batch_No = st.text_input('Batch No:')
@@ -238,7 +238,7 @@ else:
                 """, unsafe_allow_html=True)
             col1, col2, col3, col4, col5 = st.columns([2.5, 1.5, 1.5, 1.5, 1.5])
             with col1:
-                Product_Name = st.selectbox('Product Name', df_Material['Material Description'].dropna().values)
+                Product_Name = st.selectbox('Product Name', df_Material['Item Name'].dropna().values)
                 Item_Code = st.text_input('Item Code:')
                 Warehouse_Operator = st.text_input('Warehouse Operator:')
             with col2:
