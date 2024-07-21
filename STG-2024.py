@@ -9,7 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 st.set_page_config(
     layout="wide",
-    page_title='Earthquake analysis',
+    page_title='STG-2024',
     page_icon='🪙')
 
 
