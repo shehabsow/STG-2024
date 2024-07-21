@@ -4,7 +4,7 @@ import pytz
 from datetime import datetime, timedelta
 import json
 import csv
-
+from streamlit_fontawesome import stfa
 st.set_page_config(
     layout="wide",
     page_title='Earthquake analysis',
