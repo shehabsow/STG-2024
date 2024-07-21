@@ -191,6 +191,7 @@ else:
     
     if page == 'Add New Batch':
         def main():
+            df_Material = pd.read_csv('matril.csv')
             col1, col2 = st.columns([2, 0.75])
             with col1:
                 st.markdown("""
