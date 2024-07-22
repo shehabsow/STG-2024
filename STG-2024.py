@@ -243,7 +243,7 @@ else:
                 with tab6:
                     display_tab('Cartridges', 650)
                 with tab7:
-                    display_tab('MultiPharma Cartridge', 0)
+                    display_tab('MultiPharma Cartridge', 5)
      
 
             main()
