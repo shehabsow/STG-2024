@@ -74,12 +74,12 @@ def update_password(username, new_password,confirm_new_password):
 def update_quantity(row_index, quantity, operation, username):
     old_quantity = st.session_state.df.loc[row_index, 'Actual Quantity']
     if operation == 'add':
-        st.session_state.df.loc[row_index, 'Actual Quantit'] += quantity
+        st.session_state.df.loc[row_index, 'Actual Quantity'] += quantity
     elif operation == 'subtract':
-        st.session_state.df.loc[row_index, 'Actual Quantit'] -= quantity
+        st.session_state.df.loc[row_index, 'Actual Quantity'] -= quantity
     new_quantity = st.session_state.df.loc[row_index, 'Actual Quantity']
     st.session_state.df.to_csv('matril.csv', index=False)
-    st.success(f"Quantity updated successfully by {username}! New Quantity: {int(st.session_state.df.loc[row_index, 'Actual Quantit'])}")
+    st.success(f"Quantity updated successfully by {username}! New Quantity: {int(st.session_state.df.loc[row_index, 'Actual Quantity'])}")
     log_entry = {
         'user': username,
         'time':  datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
