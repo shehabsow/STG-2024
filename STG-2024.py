@@ -150,7 +150,7 @@ else:
             st.session_state.logs = []
 
         
-        page =  st.sidebar.radio('Select page', [' area','View Logs'])
+        page =  st.sidebar.radio('Select page', ['area','View Logs'])
        
         if page == 'area':
             def main():
