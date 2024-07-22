@@ -228,19 +228,19 @@ else:
                 ])
                 
                 with tab1:
-                    display_tab('Reel for Item Label (Small)', 100)
+                    display_tab('Reel for Item Label (Small)', 600)
                 with tab2:
-                    display_tab('Reel for Item Label (Large)', 200)
+                    display_tab('Reel for Item Label (Large)', 600)
                 with tab3:
-                    display_tab('Ink Reels for Item Label', 150)
+                    display_tab('Ink Reels for Item Label', 600)
                 with tab4:
-                    display_tab('Red Tape', 50)
+                    display_tab('Red Tape', 600)
                 with tab5:
-                    display_tab('Adhesive Tape', 75)
+                    display_tab('Adhesive Tape', 600)
                 with tab6:
-                    display_tab('Cartridges', 80)
+                    display_tab('Cartridges', 600)
                 with tab7:
-                    display_tab('MultiPharma Cartridge', 120)
+                    display_tab('MultiPharma Cartridge', 600)
 
                 if st.session_state.alerts:
                     st.error(f"Low stock for items: {', '.join(st.session_state.alerts)}")
