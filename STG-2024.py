@@ -212,10 +212,10 @@ else:
                 with tab1:
                     col1, col2, col3 = st.columns([30,3,13])
                     with col1:
-                        Small = df_f[df_f['Comments'] == 'Bearing'].sort_values(by='Comments')
-                        st.dataframe(peraing,width=2000)
+                        Small = df_f[df_f['Item Name'] == 'Reel for Item Label (Small)'].sort_values(by='Comments')
+                        st.dataframe(Small,width=2000)
                         col4, col5, col6 = st.columns([2,1,2])
                         with col4:
-                            display_tab('peraing')
+                            display_tab('Small')
                     with col3:
                         st.subheader('image  for  these  part'))
