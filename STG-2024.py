@@ -41,6 +41,19 @@ def save_users(users):
         json.dump(users, f)
 users = load_users()
 
+def load_alerts():
+    try:
+        with open('alerts.json', 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+# حفظ التنبيهات إلى ملف JSON
+def save_alerts(alerts):
+    with open('alerts.json', 'w') as f:
+        json.dump(alerts, f)
+
+st.session_state.alerts = load_alerts()
 
 # دالة لتسجيل الدخول
 def login(username, password):
