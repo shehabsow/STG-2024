@@ -115,7 +115,7 @@ def check_quantities():
 # دالة للتحقق من الكميات لكل تبويب وعرض التنبيهات
 def check_tab_quantities(tab_name, min_quantity):
     tab_alerts = []
-    df_tab = st.session_state.df[st.session_state.df['Category'] == tab_name]
+    df_tab = st.session_state.df[st.session_state.df['Item Name'] == tab_name]
     for index, row in df_tab.iterrows():
         if row['Actual Quantity'] < min_quantity:
             tab_alerts.append(row['Item Name'])
