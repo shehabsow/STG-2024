@@ -112,8 +112,17 @@ def check_quantities():
     st.session_state.alerts = new_alerts
     save_alerts(st.session_state.alerts)
 
+# دالة للتحقق من الكميات لكل تبويب وعرض التنبيهات
+def check_tab_quantities(tab_name, min_quantity):
+    tab_alerts = []
+    df_tab = st.session_state.df[st.session_state.df['Category'] == tab_name]
+    for index, row in df_tab.iterrows():
+        if row['Actual Quantity'] < min_quantity:
+            tab_alerts.append(row['Item Name'])
+    return tab_alerts, df_tab
+
 # عرض التبويبات
-def display_tab(tab_name):
+def display_tab(tab_name, min_quantity):
     st.header(f'{tab_name}')
     row_number = st.number_input(f'Select row number for {tab_name}:', min_value=0, max_value=len(st.session_state.df)-1, step=1, key=f'{tab_name}_row_number')
     
@@ -127,6 +136,12 @@ def display_tab(tab_name):
 
     if st.button('Update Quantity', key=f'{tab_name}_update_button'):
         update_quantity(row_number, quantity, operation, st.session_state.username)
+    
+    tab_alerts, df_tab = check_tab_quantities(tab_name, min_quantity)
+    if tab_alerts:
+        st.error(f"Low stock for items in {tab_name}: {', '.join(tab_alerts)}")
+        styled_df = df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity'])
+        st.dataframe(styled_df)
 
 # واجهة تسجيل الدخول
 if 'logged_in' not in st.session_state:
@@ -163,26 +178,23 @@ else:
         except FileNotFoundError:
             st.session_state.logs = []
 
-        # تحقق من الكميات عند بدء التطبيق
-        check_quantities()
-
         page = st.sidebar.radio('Select page', ['area', 'View Logs'])
-       
+
         if page == 'area':
             def main():
                 st.markdown("""
-                    <style>
-                        /* Add your custom CSS styles هنا */
-                        .stProgress > div > div > div {
-                            background-color: #FFD700; /* Change the color of the loading spinner */
-                            border-radius: 50%; /* Make the loading spinner circular */
-                        }
-                    </style>
+                <style>
+                    .stProgress > div > div > div {
+                        background-color: #FFD700;
+                        border-radius: 50%;
+                    }
+                </style>
                 """, unsafe_allow_html=True)
+                
                 with st.spinner("Data loaded successfully!"):
                     import time
                     time.sleep(1)
-        
+                
                 col1, col2 = st.columns([2, 0.75])
                 with col1:
                     st.markdown("""
@@ -219,19 +231,19 @@ else:
                 'Ink Reels for Item Label', 'Red Tape', 'Adhesive Tape', 'Cartridges', 'MultiPharma Cartridge'])
                 
                 with tab1:
-                    display_tab('Reel for Item Label (Small)')
+                    display_tab('Reel for Item Label (Small)', 100)
                 with tab2:
-                    display_tab('Reel for Item Label (Large)')
+                    display_tab('Reel for Item Label (Large)', 200)
                 with tab3:
-                    display_tab('Ink Reels for Item Label')
+                    display_tab('Ink Reels for Item Label', 150)
                 with tab4:
-                    display_tab('Red Tape')
+                    display_tab('Red Tape', 50)
                 with tab5:
-                    display_tab('Adhesive Tape')
+                    display_tab('Adhesive Tape', 75)
                 with tab6:
-                    display_tab('Cartridges')
+                    display_tab('Cartridges', 80)
                 with tab7:
-                    display_tab('MultiPharma Cartridge')
+                    display_tab('MultiPharma Cartridge', 120)
                 
                 if st.session_state.alerts:
                     st.error(f"Low stock for items: {', '.join(st.session_state.alerts)}")
