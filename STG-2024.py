@@ -113,7 +113,10 @@ def check_quantities():
 # دالة للتحقق من الكميات لكل تبويب وعرض التنبيهات
 def check_tab_quantities(tab_name, min_quantity):
     tab_alerts = []
-    df_tab = st.session_state.df[st.session_state.df['Item Name'] == tab_name]
+    df_tab = st.session_state.df[st.session_state.df['Category'] == tab_name]
+    for index, row in df_tab.iterrows():
+        if row['Actual Quantity'] < min_quantity:
+            tab_alerts.append(row['Item Name'])
     return tab_alerts, df_tab
 
 # عرض التبويبات
@@ -135,8 +138,8 @@ def display_tab(tab_name, min_quantity):
     tab_alerts, df_tab = check_tab_quantities(tab_name, min_quantity)
     if tab_alerts:
         st.error(f"Low stock for items in {tab_name}: {', '.join(tab_alerts)}")
-        st.write(f"Items in {tab_name} with low stock:")
-        st.dataframe(df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity']))
+        styled_df = df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity'])
+        st.dataframe(styled_df)
 
 # واجهة تسجيل الدخول
 if 'logged_in' not in st.session_state:
@@ -222,10 +225,8 @@ else:
                     st.dataframe(search_results, width=1000, height=200)
                 st.session_state.refreshed = True 
                 
-                tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-                    'Reel for Item Label (Small)', 'Reel for Item Label (Large)',
-                    'Ink Reels for Item Label', 'Red Tape', 'Adhesive Tape', 'Cartridges', 'MultiPharma Cartridge'
-                ])
+                tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(['Reel for Item Label (Small)', 'Reel for Item Label (Large)',
+                'Ink Reels for Item Label', 'Red Tape', 'Adhesive Tape', 'Cartridges', 'MultiPharma Cartridge'])
                 
                 with tab1:
                     display_tab('Reel for Item Label (Small)', 100)
@@ -241,7 +242,7 @@ else:
                     display_tab('Cartridges', 80)
                 with tab7:
                     display_tab('MultiPharma Cartridge', 120)
-
+                
                 if st.session_state.alerts:
                     st.error(f"Low stock for items: {', '.join(st.session_state.alerts)}")
 
