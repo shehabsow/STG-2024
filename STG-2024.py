@@ -221,37 +221,37 @@ else:
                         st.subheader('image  for  these  part')
 
                 with tab2:
-                        col1, col2, col3 = st.columns([30,3,13])
-                        with col1:
-                            Large = df_f[df_f['Item Name'] == 'Reel for Item Label (Large)'].sort_values(by='Item Name')
-                            st.dataframe(Large,width=2000)
-                            col4, col5, col6 = st.columns([2,1,2])
-                            with col4:
-                                display_tab('Large')
-                        with col3:
-                            st.subheader('image  for  these  part')
+                    col1, col2, col3 = st.columns([30,3,13])
+                    with col1:
+                        Large = df_f[df_f['Item Name'] == 'Reel for Item Label (Large)'].sort_values(by='Item Name')
+                        st.dataframe(Large,width=2000)
+                        col4, col5, col6 = st.columns([2,1,2])
+                        with col4:
+                            display_tab('Large')
+                    with col3:
+                        st.subheader('image  for  these  part')
 
-                 with tab3:
-                        col1, col2, col3 = st.columns([30,3,13])
-                        with col1:
-                            Ink = df_f[df_f['Item Name'] == 'Ink Reels for Item Label'].sort_values(by='Item Name')
-                            st.dataframe(Ink,width=2000)
-                            col4, col5, col6 = st.columns([2,1,2])
-                            with col4:
-                                display_tab('Ink')
-                        with col3:
-                            st.subheader('image  for  these  part')
+                with tab3:
+                    col1, col2, col3 = st.columns([30,3,13])
+                    with col1:
+                        Ink = df_f[df_f['Item Name'] == 'Ink Reels for Item Label'].sort_values(by='Item Name')
+                        st.dataframe(Ink,width=2000)
+                        col4, col5, col6 = st.columns([2,1,2])
+                        with col4:
+                            display_tab('Ink')
+                    with col3:
+                        st.subheader('image  for  these  part')
 
-                  with tab4:
-                            col1, col2, col3 = st.columns([30,3,13])
-                            with col1:
-                                Tape = df_f[df_f['Item Name'] == 'Red Tape'].sort_values(by='Item Name')
-                                st.dataframe(Tape,width=2000)
-                                col4, col5, col6 = st.columns([2,1,2])
-                                with col4:
-                                    display_tab('Tape')
-                            with col3:
-                                st.subheader('image  for  these  part')
+                with tab4:
+                    col1, col2, col3 = st.columns([30,3,13])
+                    with col1:
+                        Tape = df_f[df_f['Item Name'] == 'Red Tape'].sort_values(by='Item Name')
+                        st.dataframe(Tape,width=2000)
+                        col4, col5, col6 = st.columns([2,1,2])
+                        with col4:
+                            display_tab('Tape')
+                    with col3:
+                        st.subheader('image  for  these  part')
 
                 with tab5:
                         col1, col2, col3 = st.columns([30,3,13])
@@ -264,16 +264,16 @@ else:
                         with col3:
                             st.subheader('image  for  these  part')
 
-                 with tab6:
-                        col1, col2, col3 = st.columns([30,3,13])
-                        with col1:
-                            Cartridges = df_f[df_f['Item Name'] == 'Cartridges'].sort_values(by='Item Name')
-                            st.dataframe(Cartridges,width=2000)
-                            col4, col5, col6 = st.columns([2,1,2])
-                            with col4:
-                                display_tab('Cartridges')
-                        with col3:
-                            st.subheader('image  for  these  part')
+                with tab6:
+                    col1, col2, col3 = st.columns([30,3,13])
+                    with col1:
+                        Cartridges = df_f[df_f['Item Name'] == 'Cartridges'].sort_values(by='Item Name')
+                        st.dataframe(Cartridges,width=2000)
+                        col4, col5, col6 = st.columns([2,1,2])
+                        with col4:
+                            display_tab('Cartridges')
+                    with col3:
+                        st.subheader('image  for  these  part')
 
                 with tab7:
                         col1, col2, col3 = st.columns([30,3,13])
@@ -285,7 +285,7 @@ else:
                                 display_tab('MultiPharma')
                         with col3:
                             st.subheader('image  for  these  part')
-                            
+                        
             if __name__ == '__main__':
 
                 main()
