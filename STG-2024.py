@@ -231,17 +231,17 @@ else:
                 'Ink Reels for Item Label', 'Red Tape', 'Adhasive Tape', 'Cartridges', 'MultiPharma Cartridge'])
                 
                 with tab1:
-                    display_tab('Reel for Item Label (Small)', 100)
+                    display_tab('Reel for Item Label (Small)', 150)
                 with tab2:
-                    display_tab('Reel for Item Label (Large)', 200)
+                    display_tab('Reel for Item Label (Large)', 20)
                 with tab3:
-                    display_tab('Ink Reels for Item Label', 150)
+                    display_tab('Ink Reels for Item Label', 90)
                 with tab4:
-                    display_tab('Red Tape', 50)
+                    display_tab('Red Tape', 2)
                 with tab5:
-                    display_tab('Adhasive Tape', 100)
+                    display_tab('Adhasive Tape', 50)
                 with tab6:
-                    display_tab('Cartridges', 650)
+                    display_tab('Cartridges', 500)
                 with tab7:
                     display_tab('MultiPharma Cartridge', 5)
      
