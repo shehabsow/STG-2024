@@ -83,7 +83,7 @@ def update_quantity(row_index, quantity, operation, username):
     log_entry = {
         'user': username,
         'time':  datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
-        'item': st.session_state.df.loc[row_index, 'Item description'],
+        'item': st.session_state.df.loc[row_index, 'Item Name'],
         'old_quantity': old_quantity,
         'new_quantity': new_quantity,
         'operation': operation}
@@ -100,9 +100,9 @@ def display_tab(tab_name):
     row_number = st.number_input(f'Select row number for {tab_name}:', min_value=0, max_value=len(st.session_state.df)-1, step=1, key=f'{tab_name}_row_number')
     
     st.markdown(f"""
-    <div style='font-size: 20px; color: blue;'>Selected Item: {st.session_state.df.loc[row_number, 'Item description']}</div>
-    <div style='font-size: 20px; color: blue;'>Current Quantity: {int(st.session_state.df.loc[row_number, 'Qty.'])}</div>
-    <div style='font-size: 20px; color: red;'>Location: {st.session_state.df.loc[row_number, 'Location']}</div>
+    <div style='font-size: 20px; color: blue;'>Selected Item: {st.session_state.df.loc[row_number, 'Item Name']}</div>
+    <div style='font-size: 20px; color: blue;'>Current Quantity: {int(st.session_state.df.loc[row_number, 'Actual Quantity'])}</div>
+   
     """, unsafe_allow_html=True)
     
     quantity = st.number_input(f'Enter quantity for {tab_name}:', min_value=1, step=1, key=f'{tab_name}_quantity')
@@ -142,7 +142,7 @@ else:
         
         # قراءة البيانات
         if 'df' not in st.session_state:
-            st.session_state.df = pd.read_csv('Eng Spare parts.csv') 
+            st.session_state.df = pd.read_csv('matril.csv') 
         try:
             logs_df = pd.read_csv('logs.csv')
             st.session_state.logs = logs_df.to_dict('records')
@@ -150,8 +150,7 @@ else:
             st.session_state.logs = []
 
         
-        page =  st.sidebar.radio('Select page', ['Utility area','Mechanical parts', 'Electrical parts',
-                        'Neumatic parts','FORKLIFT','LOTOTO','Add New Item & delete','View Logs'])
+        page =  st.sidebar.radio('Select page', [' area','View Logs'])
        
         if page == 'Mechanical parts':
             def main():
@@ -208,7 +207,7 @@ else:
                 
                         
                 tab1, tab2 ,tab3, tab4,tab5, tab6 ,tab7, tab8 ,tab10, tab11 ,tab12, tab13, tab14  = st.tabs(['Bearing', 'Belts','Shaft','Spring',
-                'leaflet rooler','Cam','Clutch','Oil _ grease','Chain','Gearbox','Door','Couplin','Wheel CASTOR'])
+            '])
                 
                 with tab1:
                     col1, col2, col3 = st.columns([30,3,13])
