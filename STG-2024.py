@@ -239,7 +239,7 @@ else:
                 with tab4:
                     display_tab('Red Tape', 50)
                 with tab5:
-                    display_tab('Adhasive Tape', 75)
+                    display_tab('Adhasive Tape', 100)
                 with tab6:
                     display_tab('Cartridges', 650)
                 with tab7:
