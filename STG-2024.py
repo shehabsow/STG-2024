@@ -206,13 +206,13 @@ else:
                 st.session_state.refreshed = True 
                 
                         
-                tab1, tab2 ,tab3, tab4,tab5, tab6 ,tab7, tab8 ,tab10, tab11 ,tab12, tab13, tab14  = st.tabs(['Bearing', 'Belts','Shaft','Spring',
-            '])
+                tab1, tab2 ,tab3, tab4,tab5, tab6 ,tab7  = st.tabs(['Reel for Item Label (Small)', 'Reel for Item Label (Large)',
+                'Ink Reels for Item Label','Red Tape','Adhasive Tape','Cartridges','MultiPharma Cartridge'])
                 
                 with tab1:
                     col1, col2, col3 = st.columns([30,3,13])
                     with col1:
-                        peraing = df_f[df_f['Comments'] == 'Bearing'].sort_values(by='Comments')
+                        Small = df_f[df_f['Comments'] == 'Bearing'].sort_values(by='Comments')
                         st.dataframe(peraing,width=2000)
                         col4, col5, col6 = st.columns([2,1,2])
                         with col4:
