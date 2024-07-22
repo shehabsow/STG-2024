@@ -289,3 +289,20 @@ else:
             if __name__ == '__main__':
 
                 main()
+
+        elif page == 'View Logs':
+                def main():
+                    st.header('User Activity Logs')
+                    if st.session_state.logs:
+                        logs_df = pd.DataFrame(st.session_state.logs)
+                        st.dataframe(logs_df)
+                        csv = logs_df.to_csv(index=False)
+                        st.download_button(label="Download Logs as sheet", data=csv, file_name='user_logs.csv', mime='text/csv')
+                        
+    
+                    else:
+                        st.write("No logs available.")
+        
+                if __name__ == '__main__':
+                    
+                    main()
