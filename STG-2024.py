@@ -139,7 +139,7 @@ def display_tab(tab_name, min_quantity):
     
     tab_alerts, df_tab = check_tab_quantities(tab_name, min_quantity)
     if tab_alerts:
-        st.error(f"Low stock for items in {tab_name}: {', '.join(tab_alerts)}")
+        
         styled_df = df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity'])
         st.dataframe(styled_df)
 
@@ -241,9 +241,9 @@ else:
                 with tab5:
                     display_tab('Adhesive Tape', 75)
                 with tab6:
-                    display_tab('Cartridges', 80)
+                    display_tab('Cartridges', 650)
                 with tab7:
-                    display_tab('MultiPharma Cartridge', 120)
+                    display_tab('MultiPharma Cartridge', 0)
                 
                 if st.session_state.alerts:
                     st.error(f"Low stock for items: {', '.join(st.session_state.alerts)}")
