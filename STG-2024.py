@@ -33,14 +33,29 @@ def load_users():
             "kjjd308": {"password": "kjjd308", "first_login": True, "name": "Kaleed", "last_password_update": str(datetime.now(egypt_tz))},
             "kibx268": {"password": "kibx268", "first_login": True, "name": "Zeinab Mobarak", "last_password_update": str(datetime.now(egypt_tz))},
             "engy": {"password": "1234", "first_login": True, "name": "D.Engy", "last_password_update": str(datetime.now(egypt_tz))}
-        } 
+        }
 
 # حفظ بيانات المستخدمين إلى ملف JSON
 def save_users(users):
     with open('users5.json', 'w') as f:
         json.dump(users, f)
+
 users = load_users()
 
+# تحميل التنبيهات من ملف JSON
+def load_alerts():
+    try:
+        with open('alerts.json', 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+# حفظ التنبيهات إلى ملف JSON
+def save_alerts(alerts):
+    with open('alerts.json', 'w') as f:
+        json.dump(alerts, f)
+
+st.session_state.alerts = load_alerts()
 
 # دالة لتسجيل الدخول
 def login(username, password):
@@ -56,9 +71,8 @@ def login(username, password):
     else:
         st.error("Incorrect username or password")
 
-
 # دالة لتحديث كلمة المرور
-def update_password(username, new_password,confirm_new_password):
+def update_password(username, new_password, confirm_new_password):
     if new_password == confirm_new_password:
         users[username]["password"] = new_password
         users[username]["first_login"] = False
@@ -68,8 +82,8 @@ def update_password(username, new_password,confirm_new_password):
         st.session_state.password_expired = False
         st.success("Password updated successfully!")
     else:
-        st.error("! Passwords do not match")
-        
+        st.error("Passwords do not match!")
+
 # دالة لتحديث الكمية
 def update_quantity(row_index, quantity, operation, username):
     old_quantity = st.session_state.df.loc[row_index, 'Actual Quantity']
@@ -82,27 +96,45 @@ def update_quantity(row_index, quantity, operation, username):
     st.success(f"Quantity updated successfully by {username}! New Quantity: {int(st.session_state.df.loc[row_index, 'Actual Quantity'])}")
     log_entry = {
         'user': username,
-        'time':  datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
+        'time': datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
         'item': st.session_state.df.loc[row_index, 'Item Name'],
         'old_quantity': old_quantity,
         'new_quantity': new_quantity,
-        'operation': operation}
+        'operation': operation
+    }
     st.session_state.logs.append(log_entry)
     
     # حفظ السجلات إلى ملف CSV
     logs_df = pd.DataFrame(st.session_state.logs)
     logs_df.to_csv('logs.csv', index=False)
+    
+    # تحقق من الكميات وتحديث التنبيهات
+    check_quantities()
 
+# دالة للتحقق من الكميات الحالية وعرض التنبيهات
+def check_quantities():
+    new_alerts = []
+    for index, row in st.session_state.df.iterrows():
+        if row['Actual Quantity'] < 100:  # تغيير القيمة حسب الحاجة
+            new_alerts.append(row['Item Name'])
+    
+    st.session_state.alerts = new_alerts
+    save_alerts(st.session_state.alerts)
+
+# دالة للتحقق من الكميات لكل تبويب وعرض التنبيهات
+def check_tab_quantities(tab_name, min_quantity):
+    tab_alerts = []
+    df_tab = st.session_state.df[st.session_state.df['Item Name'] == tab_name]
+    return tab_alerts, df_tab
 
 # عرض التبويبات
-def display_tab(tab_name):
+def display_tab(tab_name, min_quantity):
     st.header(f'{tab_name}')
     row_number = st.number_input(f'Select row number for {tab_name}:', min_value=0, max_value=len(st.session_state.df)-1, step=1, key=f'{tab_name}_row_number')
     
     st.markdown(f"""
     <div style='font-size: 20px; color: blue;'>Selected Item: {st.session_state.df.loc[row_number, 'Item Name']}</div>
     <div style='font-size: 20px; color: blue;'>Current Quantity: {int(st.session_state.df.loc[row_number, 'Actual Quantity'])}</div>
-   
     """, unsafe_allow_html=True)
     
     quantity = st.number_input(f'Enter quantity for {tab_name}:', min_value=1, step=1, key=f'{tab_name}_quantity')
@@ -110,6 +142,13 @@ def display_tab(tab_name):
 
     if st.button('Update Quantity', key=f'{tab_name}_update_button'):
         update_quantity(row_number, quantity, operation, st.session_state.username)
+    
+    tab_alerts, df_tab = check_tab_quantities(tab_name, min_quantity)
+    if tab_alerts:
+        st.error(f"Low stock for items in {tab_name}: {', '.join(tab_alerts)}")
+        st.write(f"Items in {tab_name} with low stock:")
+        st.dataframe(df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity']))
+
 
 
 # واجهة تسجيل الدخول
@@ -216,7 +255,7 @@ else:
                         st.dataframe(Small,width=2000)
                         col4, col5, col6 = st.columns([2,1,2])
                         with col4:
-                            display_tab('Small')
+                            display_tab('Small',600)
                     with col3:
                         st.subheader('image  for  these  part')
 
@@ -227,7 +266,7 @@ else:
                         st.dataframe(Large,width=2000)
                         col4, col5, col6 = st.columns([2,1,2])
                         with col4:
-                            display_tab('Large')
+                            display_tab('Large',600)
                     with col3:
                         st.subheader('image  for  these  part')
 
@@ -238,7 +277,7 @@ else:
                         st.dataframe(Ink,width=2000)
                         col4, col5, col6 = st.columns([2,1,2])
                         with col4:
-                            display_tab('Ink')
+                            display_tab('Ink',600)
                     with col3:
                         st.subheader('image  for  these  part')
 
@@ -249,7 +288,7 @@ else:
                         st.dataframe(Tape,width=2000)
                         col4, col5, col6 = st.columns([2,1,2])
                         with col4:
-                            display_tab('Tape')
+                            display_tab('Tape',600)
                     with col3:
                         st.subheader('image  for  these  part')
 
@@ -260,7 +299,7 @@ else:
                             st.dataframe(Adhasive,width=2000)
                             col4, col5, col6 = st.columns([2,1,2])
                             with col4:
-                                display_tab('Adhasive')
+                                display_tab('Adhasive',600)
                         with col3:
                             st.subheader('image  for  these  part')
 
@@ -271,7 +310,7 @@ else:
                         st.dataframe(Cartridges,width=2000)
                         col4, col5, col6 = st.columns([2,1,2])
                         with col4:
-                            display_tab('Cartridges')
+                            display_tab('Cartridges',600)
                     with col3:
                         st.subheader('image  for  these  part')
 
@@ -282,7 +321,7 @@ else:
                             st.dataframe(MultiPharma,width=2000)
                             col4, col5, col6 = st.columns([2,1,2])
                             with col4:
-                                display_tab('MultiPharma')
+                                display_tab('MultiPharma',600)
                         with col3:
                             st.subheader('image  for  these  part')
                         
