@@ -1,62 +1,48 @@
-import streamlit as st
-import pandas as pd
-import pytz
-from datetime import datetime, timedelta
-import json
-import csv
-import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import streamlit as st
+import pandas as pd
+import numpy as np
+import pytz
+import requests
+from datetime import datetime, timedelta
+import json
+
 st.set_page_config(
     layout="wide",
-    page_title='STG-2024',
+    page_title='SPER-PART',
     page_icon='🪙')
 
 
-
-
 egypt_tz = pytz.timezone('Africa/Cairo')
-df_Material = pd.read_csv('matril.csv')
-#df_BIN = pd.read_csv('LOCATION.csv')
-#df_Receving = pd.read_csv('Receving.csv')
+df_f = pd.read_csv('Eng Spare parts.csv')
 
-# Load users data
+
+
 def load_users():
     try:
-        with open('users.json', 'r') as f:
+        with open('users5.json', 'r') as f:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return {
             "knhp322": {"password": "knhp322", "first_login": True, "name": "Shehab Ayman", "last_password_update": str(datetime.now(egypt_tz))},
-            "karm": {"password": "karm", "first_login": True, "name": "karm", "last_password_update": str(datetime.now(egypt_tz))},
+            "krxs742": {"password": "krxs742", "first_login": True, "name": "Mohamed Ashry", "last_password_update": str(datetime.now(egypt_tz))},
             "kxsv748": {"password": "kxsv748", "first_login": True, "name": "Mohamed El masry", "last_password_update": str(datetime.now(egypt_tz))},
             "kvwp553": {"password": "kvwp553", "first_login": True, "name": "sameh", "last_password_update": str(datetime.now(egypt_tz))},
             "knfb489": {"password": "knfb489", "first_login": True, "name": "Yasser Hassan", "last_password_update": str(datetime.now(egypt_tz))},
             "kjjd308": {"password": "kjjd308", "first_login": True, "name": "Kaleed", "last_password_update": str(datetime.now(egypt_tz))},
             "kibx268": {"password": "kibx268", "first_login": True, "name": "Zeinab Mobarak", "last_password_update": str(datetime.now(egypt_tz))},
             "engy": {"password": "1234", "first_login": True, "name": "D.Engy", "last_password_update": str(datetime.now(egypt_tz))}
-        }
+        } 
 
-# Save users data to JSON file
+# حفظ بيانات المستخدمين إلى ملف JSON
 def save_users(users):
-    with open('users.json', 'w') as f:
+    with open('users5.json', 'w') as f:
         json.dump(users, f)
+users = load_users()
 
-# Load logs from files
-def load_logs():
-    try:
-        logs_location = pd.read_csv('logs_location.csv').to_dict('records')
-    except FileNotFoundError:
-        logs_location = []
-    
-    try:
-        logs_receving = pd.read_csv('logs_receving.csv').to_dict('records')
-    except FileNotFoundError:
-        logs_receving = []
 
-    return logs_location, logs_receving
-
-# Login function
+# دالة لتسجيل الدخول
 def login(username, password):
     if username in users and users[username]["password"] == password:
         st.session_state.logged_in = True
@@ -70,8 +56,9 @@ def login(username, password):
     else:
         st.error("Incorrect username or password")
 
-# Update password function
-def update_password(username, new_password, confirm_new_password):
+
+# دالة لتحديث كلمة المرور
+def update_password(username, new_password,confirm_new_password):
     if new_password == confirm_new_password:
         users[username]["password"] = new_password
         users[username]["first_login"] = False
@@ -81,72 +68,61 @@ def update_password(username, new_password, confirm_new_password):
         st.session_state.password_expired = False
         st.success("Password updated successfully!")
     else:
-        st.error("Passwords do not match!")
-
-# Function to add new location
-def add_new_LOCATION(row_index, Product_Name, Item_Code, Batch_Number, Warehouse_Operator, Quantity, Date, BIN1, QTY1, BIN2, QTY2, BIN3, QTY3, username):
-    global df_BIN
-    new_row = {
-        'Product Name': Product_Name, 'Item Code': Item_Code, 'Batch Number': Batch_Number,
-        "Warehouse Operator": Warehouse_Operator, 'Quantity': Quantity, 'Date': Date,
-        'BIN1': BIN1, 'QTY1': QTY1, 'BIN2': BIN2, 'QTY2': QTY2, 'BIN3': BIN3, 'QTY3': QTY3
-    }
-    df_BIN = df_BIN.append(new_row, ignore_index=True)
-    df_BIN.to_csv('LOCATION.csv', index=False)
-    st.success(f"New item '{Batch_Number}' added successfully with quantity {Quantity}!")
+        st.error("! Passwords do not match")
+        
+# دالة لتحديث الكمية
+def update_quantity(row_index, quantity, operation, username):
+    old_quantity = st.session_state.df.loc[row_index, 'Qty.']
+    if operation == 'add':
+        st.session_state.df.loc[row_index, 'Qty.'] += quantity
+    elif operation == 'subtract':
+        st.session_state.df.loc[row_index, 'Qty.'] -= quantity
+    new_quantity = st.session_state.df.loc[row_index, 'Qty.']
+    st.session_state.df.to_csv('Eng Spare parts.csv', index=False)
+    st.success(f"Quantity updated successfully by {username}! New Quantity: {int(st.session_state.df.loc[row_index, 'Qty.'])}")
     log_entry = {
         'user': username,
-        'time': datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
-        'Batch Number': Batch_Number,
-        'Quantity': Quantity,
-        'BIN1': BIN1,
-        'QTY1': QTY1,
-        'BIN2': BIN2,
-        'QTY2': QTY2,
-        'BIN3': BIN3,
-        'QTY3': QTY3
-    }
-    st.session_state.logs_location.append(log_entry)
-    logs_df = pd.DataFrame(st.session_state.logs_location)
-    logs_df.to_csv('logs_location.csv', index=False)
-
-# Function to add new batch
-def add_new_Batch(username, Product_Name, Batch_No, QTY_pack, Date, Delivered_by, Received_by, Remark):
-    global df_Receving
-    new_row = {
-        'Product Name': Product_Name, 'Batch No': Batch_No, 'QTY pack': QTY_pack,
-        'Date': Date, 'Delivered by': Delivered_by, 'Received by': Received_by, 'Remark': Remark
-    }
-    df_Receving = df_Receving.append(new_row, ignore_index=True)
-    df_Receving.to_csv('Receving.csv', index=False)
-    st.success(f"New item '{Batch_No}' added successfully with quantity {QTY_pack}!")
-    log_entry = {
-        'user': username,
-        'time': datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
-        'Batch No': Batch_No,
-        'QTY pack': QTY_pack,
-        'Delivered by': Delivered_by,
-        'Received by': Received_by,
-        'Remark': Remark
-    }
-    st.session_state.logs_receving.append(log_entry)
-    logs_df = pd.DataFrame(st.session_state.logs_receving)
-    logs_df.to_csv('logs_receving.csv', index=False)
+        'time':  datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
+        'item': st.session_state.df.loc[row_index, 'Item description'],
+        'old_quantity': old_quantity,
+        'new_quantity': new_quantity,
+        'operation': operation}
+    st.session_state.logs.append(log_entry)
+    
+    # حفظ السجلات إلى ملف CSV
+    logs_df = pd.DataFrame(st.session_state.logs)
+    logs_df.to_csv('logs.csv', index=False)
 
 
-users = load_users()
+# عرض التبويبات
+def display_tab(tab_name):
+    st.header(f'{tab_name}')
+    row_number = st.number_input(f'Select row number for {tab_name}:', min_value=0, max_value=len(st.session_state.df)-1, step=1, key=f'{tab_name}_row_number')
+    
+    st.markdown(f"""
+    <div style='font-size: 20px; color: blue;'>Selected Item: {st.session_state.df.loc[row_number, 'Item description']}</div>
+    <div style='font-size: 20px; color: blue;'>Current Quantity: {int(st.session_state.df.loc[row_number, 'Qty.'])}</div>
+    <div style='font-size: 20px; color: red;'>Location: {st.session_state.df.loc[row_number, 'Location']}</div>
+    """, unsafe_allow_html=True)
+    
+    quantity = st.number_input(f'Enter quantity for {tab_name}:', min_value=1, step=1, key=f'{tab_name}_quantity')
+    operation = st.radio(f'Choose operation for {tab_name}:', ('add', 'subtract'), key=f'{tab_name}_operation')
 
+    if st.button('Update Quantity', key=f'{tab_name}_update_button'):
+        update_quantity(row_number, quantity, operation, st.session_state.username)
+
+
+# واجهة تسجيل الدخول
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
-    st.session_state.logs_location, st.session_state.logs_receving = load_logs()
-
+    st.session_state.logs = []
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
-        if st.button("Login"):
-            login(username, password)
+        st.button("Login")
+        login(username, password)
 else:
     if st.session_state.first_login:
         col1, col2, col3 = st.columns([1, 1, 1])
@@ -154,146 +130,93 @@ else:
             st.subheader("Change Password")
             new_password = st.text_input("New Password", type="password")
             confirm_new_password = st.text_input("Confirm Password", type="password")
-            if st.button("Update Password"):
+            if st.button("login"):
                 if not new_password or not confirm_new_password:
                     st.error("Please fill in all the fields.")
                 else:
                     update_password(st.session_state.username, new_password, confirm_new_password)
+                    
+            
     else:
         st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'> Login by : {users[st.session_state.username]['name']}</div>", unsafe_allow_html=True)
-
-        # Load data frames
+        
+        # قراءة البيانات
         if 'df' not in st.session_state:
-            st.session_state.df = df_Material = pd.read_csv('matril.csv')
+            st.session_state.df = pd.read_csv('Eng Spare parts.csv') 
         try:
-            df_BIN = pd.read_csv('LOCATION.csv')
+            logs_df = pd.read_csv('logs.csv')
+            st.session_state.logs = logs_df.to_dict('records')
         except FileNotFoundError:
-            df_BIN = pd.DataFrame(columns=['Product Name', 'Item Code', 'Batch Number', "Warehouse Operator",
-                                        'Quantity', 'Date', 'BIN1', 'QTY1', 'BIN2', 'QTY2', 'BIN3', 'QTY3'])
+            st.session_state.logs = []
+
         
-        try:
-            df_Receving = pd.read_csv('Receving.csv')
-        except FileNotFoundError:
-            df_Receving = pd.DataFrame(columns=['Product Name', "Batch No", "QTY pack", "Date", "Delivered by", "Received by", "Remark"])
-        
-        try:
-            logs_df = pd.read_csv('logs_location.csv')
-            st.session_state.logs_location = logs_df.to_dict('records')
-        except FileNotFoundError:
-            st.session_state.logs_location = []
-        
-        try:
-            logs_df = pd.read_csv('logs_receving.csv')
-            st.session_state.logs_receving = logs_df.to_dict('records')
-        except FileNotFoundError:
-            st.session_state.logs_receving = []
-        
-        # Display options
-        page = st.sidebar.radio("Select page", [ "Add New Batch","Add New Location", "Logs"])
-        
-        if page == 'Add New Batch':
+        page =  st.sidebar.radio('Select page', ['Utility area','Mechanical parts', 'Electrical parts',
+                        'Neumatic parts','FORKLIFT','LOTOTO','Add New Item & delete','View Logs'])
+       
+        if page == 'Mechanical parts':
             def main():
-                st.dataframe(df_Material) 
-                col1, col2 = st.columns([2, 0.75])
-                with col1:
-                    st.markdown("""
-                        <h2 style='text-align: center; font-size: 40px; color: black;'>
-                            Add New Batch
-                        </h2>
-                    """, unsafe_allow_html=True)
-                col1, col2, col3, col4, col5, col6 = st.columns([3, 2, 1.5, 1.5, 1.5, 1.5])
-                with col1:
-                    Product_Name = st.selectbox('Product Name', df_Material['Item Name'].dropna().values)
-                    Warehouse_Operator = st.text_input('Warehouse Operator:')
-                with col2:
-                    Batch_No = st.text_input('Batch No:')
-                    Date = st.date_input('Date:')
-                with col3:
-                    QTY_pack = st.text_input('QTY pack:')
-                with col4:
-                    Delivered_by = st.text_input('Delivered by:')
-                with col5:
-                    Received_by = st.text_input('Received by:')
-                with col6:
-                    Remark = st.text_input('Remark:')
+                
+                st.markdown("""
+            <style>
+                /* Add your custom CSS styles here */
+                .stProgress > div > div > div {
+                    background-color: #FFD700; /* Change the color of the loading spinner */
+                    border-radius: 50%; /* Make the loading spinner circular */
+                }
+            </style>
+        """, unsafe_allow_html=True)
+                with st.spinner("Data loaded successfully!"):
+                    import time
+                    time.sleep(1)
         
-                if st.button("Add Batch"):
-                    add_new_Batch(st.session_state.username, Product_Name, Batch_No, QTY_pack, Date, Delivered_by, Received_by, Remark)
-                    st.write('## Updated Items')
-                    st.dataframe(df_Receving)
-                csv = df_Receving.to_csv(index=False)
-                st.download_button(label="Download updated sheet", data=csv, file_name='updated_spare_parts.csv', mime='text/csv')
-            
-        
-            if __name__ == '__main__':
-                main()
-        
-        
-        elif page == "Add New Location":
-            def main():
-                col1, col2 = st.columns([2, 0.75])
-                with col1:
-                    st.markdown("""
-                        <h2 style='text-align: center; font-size: 40px; color: black;'>
-                            Add New Location
-                        </h2>
-                    """, unsafe_allow_html=True)
-                col1, col2, col3, col4, col5 = st.columns([2.5, 1.5, 1.5, 1.5, 1.5])
-                with col1:
-                    Product_Name = st.selectbox('Product Name', df_Material['Item Name'].dropna().values)
-                    Item_Code = st.text_input('Item Code:')
-                    Warehouse_Operator = st.text_input('Warehouse Operator:')
-                with col2:
-                    Batch_Number = st.text_input('Batch Number:')
-                    Quantity = st.text_input('Quantity:')
-                    Date = st.date_input('Date:')
-                with col3:
-                    BIN1 = st.text_input('BIN1:')
-                    QTY1 = st.number_input('QTY1:',min_value=0)
-                with col4:
-                    BIN2 = st.text_input('BIN2:')
-                    QTY2 = st.number_input('QTY2:',min_value=0)
-                with col5:
-                    BIN3 = st.text_input('BIN3:')
-                    QTY3 = st.number_input('QTY3:',min_value=0)
-                if st.button("Add Location"):
-                    row_index = len(df_BIN)
-                    add_new_LOCATION(row_index, Product_Name, Item_Code, Batch_Number, Warehouse_Operator, Quantity, Date, BIN1, QTY1, BIN2, QTY2, BIN3, QTY3, st.session_state.username)
-                    st.write('## Updated Items')
-                    st.dataframe(df_BIN)
-                csv = df_BIN.to_csv(index=False)
-                st.download_button(label="Download updated sheet", data=csv, file_name='updated_spare_parts.csv', mime='text/csv')
-            
-        
-            if __name__ == '__main__':
-                main()
-        
-        elif page == "Logs":
-            def main():
                 
                 col1, col2 = st.columns([2, 0.75])
                 with col1:
                     st.markdown("""
-                        <h2 style='text-align: center; font-size: 40px; color: black;'>
-                            View Logs
+                        <h2 style='text-align: center; font-size: 40px; color: red;'>
+                            Find your Mechanical parts
                         </h2>
                     """, unsafe_allow_html=True)
-                st.subheader("receving Logs")
-                if st.session_state.logs_receving:
-                    logs_df = pd.DataFrame(st.session_state.logs_receving)
-                    st.dataframe(logs_df)
-                    csv = logs_df.to_csv(index=False)
-                    st.download_button(label="Download Logs as sheet", data=csv, file_name='user_logs_receving.csv', mime='text/csv')
-                else:
-                    st.write("No receving logs available.")
-        
-                st.subheader("Location Logs")
-                if st.session_state.logs_location:
-                    logs_df = pd.DataFrame(st.session_state.logs_location)
-                    st.dataframe(logs_df)
-                    csv = logs_df.to_csv(index=False)
-                    st.download_button(label="Download Logs as CSV", data=csv, file_name='location_logs.csv', mime='text/csv')
-                else:
-                    st.write("No location logs available.")
-            if __name__ == '__main__':
-                main()
+                
+                with col2:
+                    # Retrieve or initialize search keyword from session state
+                    search_keyword = st.session_state.get('search_keyword', '')
+                    search_keyword = st.text_input("Enter keyword to search:", search_keyword)
+                    search_button = st.button("Search")
+                    search_option = 'All Columns'
+                def search_in_dataframe(df_f, keyword, option):
+                    if option == 'All Columns':
+                        result = df_f[df_f.apply(lambda row: row.astype(str).str.contains(keyword, case=False).any(), axis=1)]
+                    else:
+                        result = df_f[df_f[option].astype(str).str.contains(keyword, case=False)]
+                    return result
+                
+                # Clear search keyword on page refresh
+                if st.session_state.get('refreshed', False):
+                    st.session_state.search_keyword = ''
+                    st.session_state.refreshed = False
+                
+                # Perform search if button is clicked and keyword is not empty
+                if search_button and search_keyword:
+                    # Update session state with current search keyword
+                    st.session_state.search_keyword = search_keyword
+                    search_results = search_in_dataframe(df_f, search_keyword, search_option)
+                    st.write(f"Search results for '{search_keyword}' in {search_option}:")
+                    st.dataframe(search_results, width=1000, height=200)
+                # Set refreshed state to clear search keyword on page refresh
+                st.session_state.refreshed = True 
+                
+                        
+                tab1, tab2 ,tab3, tab4,tab5, tab6 ,tab7, tab8 ,tab10, tab11 ,tab12, tab13, tab14  = st.tabs(['Bearing', 'Belts','Shaft','Spring',
+                'leaflet rooler','Cam','Clutch','Oil _ grease','Chain','Gearbox','Door','Couplin','Wheel CASTOR'])
+                
+                with tab1:
+                    col1, col2, col3 = st.columns([30,3,13])
+                    with col1:
+                        peraing = df_f[df_f['Comments'] == 'Bearing'].sort_values(by='Comments')
+                        st.dataframe(peraing,width=2000)
+                        col4, col5, col6 = st.columns([2,1,2])
+                        with col4:
+                            display_tab('peraing')
+                    with col3:
+                        st.subheader('image  for  these  part'))
