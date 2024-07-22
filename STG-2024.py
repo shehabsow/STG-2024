@@ -145,7 +145,7 @@ if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.logs = []
 if not st.session_state.logged_in:
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
@@ -230,19 +230,19 @@ else:
                 ])
                 
                 with tab1:
-                    display_tab('Reel for Item Label (Small)', 100)
+                    display_tab('Reel for Item Label (Small)', 650)
                 with tab2:
-                    display_tab('Reel for Item Label (Large)', 200)
+                    display_tab('Reel for Item Label (Large)', 650)
                 with tab3:
-                    display_tab('Ink Reels for Item Label', 150)
+                    display_tab('Ink Reels for Item Label', 650)
                 with tab4:
-                    display_tab('Red Tape', 50)
+                    display_tab('Red Tape', 650)
                 with tab5:
-                    display_tab('Adhesive Tape', 75)
+                    display_tab('Adhesive Tape', 650)
                 with tab6:
-                    display_tab('Cartridges', 80)
+                    display_tab('Cartridges', 650)
                 with tab7:
-                    display_tab('MultiPharma Cartridge', 120)
+                    display_tab('MultiPharma Cartridge', 650)
         
                 if st.session_state.alerts:
                     st.error(f"Low stock for items: {', '.join(st.session_state.alerts)}")
