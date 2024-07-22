@@ -82,19 +82,31 @@ def update_quantity(row_index, quantity, operation, username):
     st.success(f"Quantity updated successfully by {username}! New Quantity: {int(st.session_state.df.loc[row_index, 'Actual Quantity'])}")
     log_entry = {
         'user': username,
-        'time':  datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
+        'time': datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
         'item': st.session_state.df.loc[row_index, 'Item Name'],
         'old_quantity': old_quantity,
         'new_quantity': new_quantity,
-        'operation': operation}
+        'operation': operation
+    }
     st.session_state.logs.append(log_entry)
     
-    # حفظ السجلات إلى ملف CSV
+    # Save logs to CSV
     logs_df = pd.DataFrame(st.session_state.logs)
     logs_df.to_csv('logs.csv', index=False)
+    
+    # Check if the quantity is below the threshold
+    check_quantity_threshold(row_index)
 
+# Function to check quantity threshold
+def check_quantity_threshold(row_index):
+    threshold = 100  # You can set the threshold value here
+    if st.session_state.df.loc[row_index, 'Actual Quantity'] < threshold:
+        st.warning(f"Item {st.session_state.df.loc[row_index, 'Item Name']} needs restocking!")
+        if 'alerts' not in st.session_state:
+            st.session_state.alerts = []
+        st.session_state.alerts.append(st.session_state.df.loc[row_index, 'Item Name'])
 
-# عرض التبويبات
+# Display tabs
 def display_tab(tab_name):
     st.header(f'{tab_name}')
     row_number = st.number_input(f'Select row number for {tab_name}:', min_value=0, max_value=len(st.session_state.df)-1, step=1, key=f'{tab_name}_row_number')
@@ -102,7 +114,6 @@ def display_tab(tab_name):
     st.markdown(f"""
     <div style='font-size: 20px; color: blue;'>Selected Item: {st.session_state.df.loc[row_number, 'Item Name']}</div>
     <div style='font-size: 20px; color: blue;'>Current Quantity: {int(st.session_state.df.loc[row_number, 'Actual Quantity'])}</div>
-   
     """, unsafe_allow_html=True)
     
     quantity = st.number_input(f'Enter quantity for {tab_name}:', min_value=1, step=1, key=f'{tab_name}_quantity')
@@ -110,6 +121,7 @@ def display_tab(tab_name):
 
     if st.button('Update Quantity', key=f'{tab_name}_update_button'):
         update_quantity(row_number, quantity, operation, st.session_state.username)
+
 
 
 # واجهة تسجيل الدخول
