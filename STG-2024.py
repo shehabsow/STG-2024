@@ -218,4 +218,7 @@ else:
                         with col4:
                             display_tab('Small')
                     with col3:
-                        st.subheader('image  for  these  part'))
+                        st.subheader('image  for  these  part')
+            if __name__ == '__main__':
+
+                main()
