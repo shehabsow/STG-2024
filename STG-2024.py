@@ -10,7 +10,7 @@ import json
 
 st.set_page_config(
     layout="wide",
-    page_title='SPER-PART',
+    page_title='STG-2024',
     page_icon='🪙')
 
 
@@ -217,6 +217,17 @@ else:
                         col4, col5, col6 = st.columns([2,1,2])
                         with col4:
                             display_tab('Small')
+                    with col3:
+                        st.subheader('image  for  these  part')
+
+            with tab2:
+                    col1, col2, col3 = st.columns([30,3,13])
+                    with col1:
+                        Large = df_f[df_f['Item Name'] == 'Reel for Item Label (Large)'].sort_values(by='Item Name')
+                        st.dataframe(Large,width=2000)
+                        col4, col5, col6 = st.columns([2,1,2])
+                        with col4:
+                            display_tab('Large')
                     with col3:
                         st.subheader('image  for  these  part')
             if __name__ == '__main__':
