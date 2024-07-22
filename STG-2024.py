@@ -228,7 +228,7 @@ else:
                 st.session_state.refreshed = True 
                 
                 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(['Reel for Item Label (Small)', 'Reel for Item Label (Large)',
-                'Ink Reels for Item Label', 'Red Tape', 'Adhesive Tape', 'Cartridges', 'MultiPharma Cartridge'])
+                'Ink Reels for Item Label', 'Red Tape', 'Adhasive Tape', 'Cartridges', 'MultiPharma Cartridge'])
                 
                 with tab1:
                     display_tab('Reel for Item Label (Small)', 100)
@@ -239,7 +239,7 @@ else:
                 with tab4:
                     display_tab('Red Tape', 50)
                 with tab5:
-                    display_tab('Adhesive Tape', 75)
+                    display_tab('Adhasive Tape', 75)
                 with tab6:
                     display_tab('Cartridges', 650)
                 with tab7:
