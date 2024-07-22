@@ -1,5 +1,3 @@
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import streamlit as st
 import pandas as pd
 import json
@@ -115,7 +113,7 @@ def check_quantities():
 # دالة للتحقق من الكميات لكل تبويب وعرض التنبيهات
 def check_tab_quantities(tab_name, min_quantity):
     tab_alerts = []
-    df_tab = st.session_state.df[st.session_state.df['Item Name'] == tab_name]
+    df_tab = st.session_state.df[st.session_state.df['Category'] == tab_name]
     return tab_alerts, df_tab
 
 # عرض التبويبات
@@ -145,7 +143,7 @@ if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.logs = []
 if not st.session_state.logged_in:
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
@@ -174,9 +172,9 @@ else:
             st.session_state.logs = logs_df.to_dict('records')
         except FileNotFoundError:
             st.session_state.logs = []
-        
+
         page = st.sidebar.radio('Select page', ['area', 'View Logs'])
-        
+
         if page == 'area':
             def main():
                 st.markdown("""
@@ -230,25 +228,25 @@ else:
                 ])
                 
                 with tab1:
-                    display_tab('Reel for Item Label (Small)', 650)
+                    display_tab('Reel for Item Label (Small)', 100)
                 with tab2:
-                    display_tab('Reel for Item Label (Large)', 650)
+                    display_tab('Reel for Item Label (Large)', 200)
                 with tab3:
-                    display_tab('Ink Reels for Item Label', 650)
+                    display_tab('Ink Reels for Item Label', 150)
                 with tab4:
-                    display_tab('Red Tape', 650)
+                    display_tab('Red Tape', 50)
                 with tab5:
-                    display_tab('Adhesive Tape', 650)
+                    display_tab('Adhesive Tape', 75)
                 with tab6:
-                    display_tab('Cartridges', 650)
+                    display_tab('Cartridges', 80)
                 with tab7:
-                    display_tab('MultiPharma Cartridge', 650)
-        
+                    display_tab('MultiPharma Cartridge', 120)
+
                 if st.session_state.alerts:
                     st.error(f"Low stock for items: {', '.join(st.session_state.alerts)}")
-        
+
             main()
-        
+
         elif page == 'View Logs':
             st.header('Logs')
             if st.session_state.logs:
@@ -256,4 +254,3 @@ else:
                 st.dataframe(logs_df, width=1000, height=400)
             else:
                 st.write("No logs available.")
-
