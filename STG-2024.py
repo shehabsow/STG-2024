@@ -95,16 +95,17 @@ def update_quantity(row_index, quantity, operation, username):
     logs_df.to_csv('logs.csv', index=False)
     
     # Check if the quantity is below the threshold
-    check_quantity_threshold(row_index)
+    check_quantities()
 
 # Function to check quantity threshold
-def check_quantity_threshold(row_index):
-    threshold = 100  # You can set the threshold value here
-    if st.session_state.df.loc[row_index, 'Actual Quantity'] < threshold:
-        st.warning(f"Item {st.session_state.df.loc[row_index, 'Item Name']} needs restocking!")
-        if 'alerts' not in st.session_state:
-            st.session_state.alerts = []
-        st.session_state.alerts.append(st.session_state.df.loc[row_index, 'Item Name'])
+def check_quantities():
+    new_alerts = []
+    for index, row in st.session_state.df.iterrows():
+        if row['Actual Quantity'] < 100:  # تغيير القيمة حسب الحاجة
+            new_alerts.append(row['Item Name'])
+    
+    st.session_state.alerts = new_alerts
+    save_alerts(st.session_state.alerts)
 
 # Display tabs
 def display_tab(tab_name):
