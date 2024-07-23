@@ -232,7 +232,8 @@ else:
                 ])
                 
                 with tab1:
-                  
+                    peraing = df_f[df_f['Item Name'] == 'Reel for Item Label (Small)'].sort_values(by='Item Name')
+                    st.dataframe(peraing,width=2000)
                     display_tab('Reel for Item Label (Small)', 100)
                    
                 with tab2:
