@@ -146,7 +146,7 @@ if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.logs = []
 if not st.session_state.logged_in:
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3 = st.columns([5, 5,5])
     with col2:
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
