@@ -180,7 +180,7 @@ else:
                 <style>
                     .main {
                         padding: 0rem 1rem;
-                        width: 100%;
+                        width: 200%;
                     }
                     .stApp {
                         overflow: hidden;
