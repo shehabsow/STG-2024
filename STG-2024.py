@@ -114,6 +114,7 @@ def check_quantities():
 def check_tab_quantities(tab_name, min_quantity):
     tab_alerts = []
     df_tab = st.session_state.df[st.session_state.df['Item Name'] == tab_name]
+    tab_alerts = df_tab[df_tab['Actual Quantity'] < min_quantity]['Item Name'].tolist()
     return tab_alerts, df_tab
 
 # عرض التبويبات
@@ -136,7 +137,9 @@ def display_tab(tab_name, min_quantity):
     if tab_alerts:
         st.error(f"Low stock for items in {tab_name}: {', '.join(tab_alerts)}")
         st.write(f"Items in {tab_name} with low stock:")
-        st.dataframe(df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity']))
+        st.dataframe(
+            df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity'])
+        )
 
 # واجهة تسجيل الدخول
 if 'logged_in' not in st.session_state:
@@ -165,6 +168,7 @@ else:
         st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'>Logged in by: {users[st.session_state.username]['name']}</div>", unsafe_allow_html=True)
         
         # قراءة البيانات
+       ```python
         if 'df' not in st.session_state:
             st.session_state.df = pd.read_csv('matril.csv')
         try:
