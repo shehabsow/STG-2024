@@ -240,7 +240,7 @@ else:
                 
                 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
                     'Reel for Item Label (Small)', 'Reel for Item Label (Large)',
-                    'Ink Reels for Item Label', 'Red Tape', 'Adhesive Tape', 'Cartridges', 'MultiPharma Cartridge'
+                    'Ink Reels for Item Label', 'Red Tape', 'Adhasive Tape', 'Cartridges', 'MultiPharma Cartridge'
                 ])
                 
                 with tab1:
@@ -261,9 +261,9 @@ else:
                     st.dataframe(peraing,width=2000)
                     display_tab('Red Tape', 50)
                 with tab5:
-                    peraing = df_f[df_f['Item Name'] == 'Adhesive Tape'].sort_values(by='Item Name')
+                    peraing = df_f[df_f['Item Name'] == 'Adhasive Tape'].sort_values(by='Item Name')
                     st.dataframe(peraing,width=2000)
-                    display_tab('Adhesive Tape', 75)
+                    display_tab('Adhasive Tape', 75)
                 with tab6:
                     peraing = df_f[df_f['Item Name'] == 'Cartridges'].sort_values(by='Item Name')
                     st.dataframe(peraing,width=2000)
