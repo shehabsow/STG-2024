@@ -12,7 +12,7 @@ df_Material = pd.read_csv('matril.csv')
 df_BIN = pd.DataFrame(columns=['Product Name', 'Item Code', 'Batch Number', "Warehouse Operator", 'Quantity', 'Date', 'BIN1', 'QTY1', 'BIN2', 'QTY2', 'BIN3', 'QTY3'])
 df_Receving = pd.DataFrame(columns=['Product Name', "Batch No", 'Item Code', "QTY pack", "Date", "Delivered by", "Received by", "Remark"])
 
-# Load users data
+# Load users data 
 def load_users():
     try:
         with open('users.json', 'r') as f:
