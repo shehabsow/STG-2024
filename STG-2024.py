@@ -179,7 +179,7 @@ else:
         
 page = st.sidebar.radio('Select page', ['area', 'View Logs'])
 
-if page == 'area'
+if page == 'area':
     def main():
         st.markdown("""
         <style>
