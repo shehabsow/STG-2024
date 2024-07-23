@@ -180,7 +180,7 @@ else:
         page = st.sidebar.radio('Select page', ['area', 'View Logs'])
 
         if page == 'area':
-            col1, col2, col3 = st.columns([100,500,100])
+            col1, col2, col3 = st.columns([0,500,0])
             with col2:
                 def main():
                     st.markdown("""
