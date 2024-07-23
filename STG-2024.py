@@ -83,7 +83,7 @@ def update_password(username, new_password,confirm_new_password):
         st.error("! Passwords do not match")
         
 # دالة لتحديث الكمية
-ef update_quantity(row_index, quantity, operation, username):
+def update_quantity(row_index, quantity, operation, username):
     old_quantity = st.session_state.df.loc[row_index, 'Actual Quantity']
     if operation == 'add':
         st.session_state.df.loc[row_index, 'Actual Quantity'] += quantity
