@@ -173,8 +173,7 @@ else:
                 else:
                     update_password(st.session_state.username, new_password, confirm_new_password)
     else:
-        st.markdown(f"<div style='text```python
--align: right; font-size: 20px; color: black;'>User: {st.session_state.username}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align: right; font-size: 20px; color: black;'>User: {st.session_state.username}</div>", unsafe_allow_html=True)
         if st.session_state.password_expired:
             st.warning("Your password has expired. Please update your password.")
             col1, col2, col3 = st.columns([1, 1, 1])
