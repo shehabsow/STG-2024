@@ -1,13 +1,22 @@
 import streamlit as st
 import pandas as pd
-import json
-from datetime import datetime, timedelta
+import numpy as np
 import pytz
+import requests
+from datetime import datetime, timedelta
+import json
 
-# تعيين المنطقة الزمنية لمصر
+st.set_page_config(
+    layout="wide",
+    page_title='SPER-PART',
+    page_icon='🪙')
+
+
 egypt_tz = pytz.timezone('Africa/Cairo')
+df_f = pd.read_csv('Eng Spare parts.csv')
 
-# تحميل بيانات المستخدمين من ملف JSON
+
+
 def load_users():
     try:
         with open('users5.json', 'r') as f:
@@ -22,16 +31,14 @@ def load_users():
             "kjjd308": {"password": "kjjd308", "first_login": True, "name": "Kaleed", "last_password_update": str(datetime.now(egypt_tz))},
             "kibx268": {"password": "kibx268", "first_login": True, "name": "Zeinab Mobarak", "last_password_update": str(datetime.now(egypt_tz))},
             "engy": {"password": "1234", "first_login": True, "name": "D.Engy", "last_password_update": str(datetime.now(egypt_tz))}
-        }
+        } 
 
 # حفظ بيانات المستخدمين إلى ملف JSON
 def save_users(users):
     with open('users5.json', 'w') as f:
         json.dump(users, f)
-
 users = load_users()
 
-# تحميل التنبيهات من ملف JSON
 def load_alerts():
     try:
         with open('alerts.json', 'r') as f:
@@ -45,6 +52,7 @@ def save_alerts(alerts):
         json.dump(alerts, f)
 
 st.session_state.alerts = load_alerts()
+
 
 # دالة لتسجيل الدخول
 def login(username, password):
@@ -60,8 +68,9 @@ def login(username, password):
     else:
         st.error("Incorrect username or password")
 
+
 # دالة لتحديث كلمة المرور
-def update_password(username, new_password, confirm_new_password):
+def update_password(username, new_password,confirm_new_password):
     if new_password == confirm_new_password:
         users[username]["password"] = new_password
         users[username]["first_login"] = False
@@ -71,10 +80,10 @@ def update_password(username, new_password, confirm_new_password):
         st.session_state.password_expired = False
         st.success("Password updated successfully!")
     else:
-        st.error("Passwords do not match!")
-
+        st.error("! Passwords do not match")
+        
 # دالة لتحديث الكمية
-def update_quantity(row_index, quantity, operation, username):
+ef update_quantity(row_index, quantity, operation, username):
     old_quantity = st.session_state.df.loc[row_index, 'Actual Quantity']
     if operation == 'add':
         st.session_state.df.loc[row_index, 'Actual Quantity'] += quantity
@@ -141,6 +150,7 @@ def display_tab(tab_name, min_quantity):
             df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity'])
         )
 
+
 # واجهة تسجيل الدخول
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -150,8 +160,8 @@ if not st.session_state.logged_in:
     with col2:
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
-        if st.button("Login"):
-            login(username, password)
+        st.button("Login")
+        login(username, password)
 else:
     if st.session_state.first_login:
         col1, col2, col3 = st.columns([1, 1, 1])
@@ -159,40 +169,45 @@ else:
             st.subheader("Change Password")
             new_password = st.text_input("New Password", type="password")
             confirm_new_password = st.text_input("Confirm Password", type="password")
-            if st.button("Change Password"):
+            if st.button("login"):
                 if not new_password or not confirm_new_password:
                     st.error("Please fill in all the fields.")
                 else:
                     update_password(st.session_state.username, new_password, confirm_new_password)
+                    
+            
     else:
-        st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'>Logged in by: {users[st.session_state.username]['name']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'> Login by : {users[st.session_state.username]['name']}</div>", unsafe_allow_html=True)
         
         # قراءة البيانات
-   
         if 'df' not in st.session_state:
-            st.session_state.df = pd.read_csv('matril.csv')
+            st.session_state.df = pd.read_csv('Eng Spare parts.csv') 
         try:
             logs_df = pd.read_csv('logs.csv')
             st.session_state.logs = logs_df.to_dict('records')
         except FileNotFoundError:
             st.session_state.logs = []
 
-        page = st.sidebar.radio('Select page', ['area', 'View Logs'])
-
-        if page == 'area':
+        
+        page =  st.sidebar.radio('Select page', ['Utility area','Mechanical parts', 'Electrical parts',
+                        'Neumatic parts','FORKLIFT','LOTOTO','Add New Item & delete','View Logs'])
+       
+        if page == 'Mechanical parts':
             def main():
-                st.markdown("""
-                <style>
-                    .stProgress > div > div > div {
-                        background-color: #FFD700;
-                        border-radius: 50%;
-                    }
-                </style>
-                """, unsafe_allow_html=True)
                 
+                st.markdown("""
+            <style>
+                /* Add your custom CSS styles here */
+                .stProgress > div > div > div {
+                    background-color: #FFD700; /* Change the color of the loading spinner */
+                    border-radius: 50%; /* Make the loading spinner circular */
+                }
+            </style>
+        """, unsafe_allow_html=True)
                 with st.spinner("Data loaded successfully!"):
                     import time
                     time.sleep(1)
+        
                 
                 col1, col2 = st.columns([2, 0.75])
                 with col1:
@@ -203,11 +218,11 @@ else:
                     """, unsafe_allow_html=True)
                 
                 with col2:
+                    # Retrieve or initialize search keyword from session state
                     search_keyword = st.session_state.get('search_keyword', '')
                     search_keyword = st.text_input("Enter keyword to search:", search_keyword)
                     search_button = st.button("Search")
                     search_option = 'All Columns'
-                
                 def search_in_dataframe(df_f, keyword, option):
                     if option == 'All Columns':
                         result = df_f[df_f.apply(lambda row: row.astype(str).str.contains(keyword, case=False).any(), axis=1)]
@@ -215,46 +230,33 @@ else:
                         result = df_f[df_f[option].astype(str).str.contains(keyword, case=False)]
                     return result
                 
+                # Clear search keyword on page refresh
                 if st.session_state.get('refreshed', False):
                     st.session_state.search_keyword = ''
                     st.session_state.refreshed = False
                 
+                # Perform search if button is clicked and keyword is not empty
                 if search_button and search_keyword:
+                    # Update session state with current search keyword
                     st.session_state.search_keyword = search_keyword
-                    search_results = search_in_dataframe(st.session_state.df, search_keyword, search_option)
+                    search_results = search_in_dataframe(df_f, search_keyword, search_option)
                     st.write(f"Search results for '{search_keyword}' in {search_option}:")
                     st.dataframe(search_results, width=1000, height=200)
+                # Set refreshed state to clear search keyword on page refresh
                 st.session_state.refreshed = True 
                 
-                tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-                    'Reel for Item Label (Small)', 'Reel for Item Label (Large)',
-                    'Ink Reels for Item Label', 'Red Tape', 'Adhesive Tape', 'Cartridges', 'MultiPharma Cartridge'
-                ])
+                        
+                tab1, tab2 ,tab3, tab4,tab5, tab6 ,tab7, tab8 ,tab10, tab11 ,tab12, tab13, tab14  = st.tabs(['Bearing', 'Belts','Shaft','Spring',
+                'leaflet rooler','Cam','Clutch','Oil _ grease','Chain','Gearbox','Door','Couplin','Wheel CASTOR'])
                 
                 with tab1:
-                    display_tab('Reel for Item Label (Small)', 100)
-                with tab2:
-                    display_tab('Reel for Item Label (Large)', 200)
-                with tab3:
-                    display_tab('Ink Reels for Item Label', 150)
-                with tab4:
-                    display_tab('Red Tape', 50)
-                with tab5:
-                    display_tab('Adhesive Tape', 75)
-                with tab6:
-                    display_tab('Cartridges', 80)
-                with tab7:
-                    display_tab('MultiPharma Cartridge', 120)
-
-                if st.session_state.alerts:
-                    st.error(f"Low stock for items: {', '.join(st.session_state.alerts)}")
-
-            main()
-
-        elif page == 'View Logs':
-            st.header('Logs')
-            if st.session_state.logs:
-                logs_df = pd.DataFrame(st.session_state.logs)
-                st.dataframe(logs_df, width=1000, height=400)
-            else:
-                st.write("No logs available.")
+                    col1, col2, col3 = st.columns([30,3,13])
+                    with col1:
+                        peraing = df_f[df_f['Comments'] == 'Bearing'].sort_values(by='Comments')
+                        st.dataframe(peraing,width=2000)
+                        col4, col5, col6 = st.columns([2,1,2])
+                        with col4:
+                            display_tab('peraing', 100)
+                    with col3:
+                        st.subheader('image  for  these  part')
+                
