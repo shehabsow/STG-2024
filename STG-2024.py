@@ -181,7 +181,7 @@ else:
         
         if page == 'area':
             col1, col2= st.columns([1,100000])
-            with col1:
+            with col2:
                 def main():
                     st.markdown("""
                     <style>
