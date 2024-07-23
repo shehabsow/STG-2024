@@ -255,9 +255,9 @@ if page == 'area':
     main()
 
 elif page == 'View Logs':
-st.header('Logs')
-if st.session_state.logs:
-    logs_df = pd.DataFrame(st.session_state.logs)
-    st.dataframe(logs_df, width=1000, height=400)
-else:
-    st.write("No logs available.")
+    st.header('Logs')
+    if st.session_state.logs:
+        logs_df = pd.DataFrame(st.session_state.logs)
+        st.dataframe(logs_df, width=1000, height=400)
+    else:
+        st.write("No logs available.")
