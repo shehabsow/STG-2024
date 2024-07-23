@@ -6,7 +6,7 @@ import pytz
 
 # تعيين المنطقة الزمنية لمصر
 egypt_tz = pytz.timezone('Africa/Cairo')
-
+df_f = pd.read_csv('matril.csv')
 # تحميل بيانات المستخدمين من ملف JSON
 def load_users():
     try:
