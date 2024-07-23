@@ -257,4 +257,8 @@ else:
                             display_tab('peraing', 100)
                     with col3:
                         st.subheader('image  for  these  part')
+
+            if __name__ == '__main__':
+        
+                main()
                 
