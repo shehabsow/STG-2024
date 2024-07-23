@@ -250,7 +250,7 @@ else:
                 with tab1:
                     col1, col2, col3 = st.columns([30,3,13])
                     with col1:
-                        peraing = df_f[df_f['Item Name'] == 'Bearing'].sort_values(by='Comments')
+                        peraing = df_f[df_f['Item Name'] == 'Reel for Item Label (Small)'].sort_values(by='Item Name')
                         st.dataframe(peraing,width=2000)
                         col4, col5, col6 = st.columns([2,1,2])
                         with col4:
