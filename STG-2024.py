@@ -189,10 +189,9 @@ else:
             st.session_state.logs = []
 
         
-        page =  st.sidebar.radio('Select page', ['Utility area','Mechanical parts', 'Electrical parts',
-                        'Neumatic parts','FORKLIFT','LOTOTO','Add New Item & delete','View Logs'])
+        page =  st.sidebar.radio('Select page', ['area','View Logs'])
        
-        if page == 'Mechanical parts':
+        if page == 'area':
             def main():
                 
                 st.markdown("""
@@ -246,8 +245,7 @@ else:
                 st.session_state.refreshed = True 
                 
                         
-                tab1, tab2 ,tab3, tab4,tab5, tab6 ,tab7, tab8 ,tab10, tab11 ,tab12, tab13, tab14  = st.tabs(['Bearing', 'Belts','Shaft','Spring',
-                'leaflet rooler','Cam','Clutch','Oil _ grease','Chain','Gearbox','Door','Couplin','Wheel CASTOR'])
+                tab1, tab2 ,tab3, tab4,tab5, tab6 ,tab7  = st.tabs(['Bearing', 'Belts','Shaft','Spring','leaflet rooler','Cam','Clutch'])
                 
                 with tab1:
                     col1, col2, col3 = st.columns([30,3,13])
