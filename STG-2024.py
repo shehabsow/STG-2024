@@ -233,7 +233,7 @@ else:
                 
                 with tab1:
                   
-                    display_tab('tab1', 100)
+                    display_tab('Reel for Item Label (Small)', 100)
                    
                 with tab2:
                     display_tab('Reel for Item Label (Large)', 200)
