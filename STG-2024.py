@@ -176,6 +176,18 @@ else:
             st.session_state.logs = logs_df.to_dict('records')
         except FileNotFoundError:
             st.session_state.logs = []
+st.markdown("""
+        <style>
+            .main {
+                padding: 0rem 1rem;
+                width: 100%;
+            }
+            .stApp {
+                overflow: hidden;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
         
 page = st.sidebar.radio('Select page', ['area', 'View Logs'])
 
