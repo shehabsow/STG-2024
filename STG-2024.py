@@ -168,7 +168,7 @@ else:
         st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'>Logged in by: {users[st.session_state.username]['name']}</div>", unsafe_allow_html=True)
         
         # قراءة البيانات
-       ```python
+   
         if 'df' not in st.session_state:
             st.session_state.df = pd.read_csv('matril.csv')
         try:
