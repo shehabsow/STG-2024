@@ -232,9 +232,9 @@ else:
                 ])
                 
                 with tab1:
-                    Label_Small = df_f[df_f['Item Name'] == 'Reel for Item Label (Small)'].sort_values(by='Item Name')
-                    st.dataframe(Label_Small,width=2000)
-                    display_tab('Label_Small', 100)
+                    tab1 = df_f[df_f['Item Name'] == 'Reel for Item Label (Small)'].sort_values(by='Item Name')
+                    st.dataframe(tab1,width=2000)
+                    display_tab('tab1', 100)
                    
                 with tab2:
                     display_tab('Reel for Item Label (Large)', 200)
