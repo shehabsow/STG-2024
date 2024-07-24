@@ -296,12 +296,12 @@ else:
             logs_df = pd.DataFrame(st.session_state.logs)
             st.dataframe(logs_df, width=1000, height=400)
             if st.button('Clear Logs'):
-                        st.session_state.logs = []
-                        try:
-                            os.remove('logs.csv')
-                        except FileNotFoundError:
-                            pass
-                        st.success("Logs cleared successfully!")
-                else:
-                    st.write("No logs available.")
-      
+                st.session_state.logs = []
+                try:
+                    os.remove('logs.csv')
+                except FileNotFoundError:
+                    pass
+                st.success("Logs cleared successfully!")
+            else:
+                st.write("No logs available.")
+  
