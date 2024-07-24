@@ -200,9 +200,9 @@ else:
             """, unsafe_allow_html=True)
     
              
-    page = st. sidebar.radio('Select page', ['area', 'View Logs'])
+    page = st. sidebar.radio('Select page', ['STG-2024', 'View Logs'])
     
-    if page == 'area':
+    if page == 'STG-2024':
         def main():
             st.markdown("""
             <style>
@@ -221,7 +221,7 @@ else:
             with col1:
                 st.markdown("""
                     <h2 style='text-align: center; font-size: 40px; color: red;'>
-                        Find your Mechanical parts
+                        Find your parts
                     </h2>
                 """, unsafe_allow_html=True)
             
