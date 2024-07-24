@@ -255,14 +255,14 @@ else:
             ])
             
             with tab1:
-                peraing = df_f[df_f['Item Name'] == 'Reel for Label (Small)'].sort_values(by='Item Name')
+                peraing = df_f[df_f['Item Name'] == 'Reel Label (Small)'].sort_values(by='Item Name')
                 st.dataframe(peraing,width=2000)
-                display_tab('Reel for Label (Small)', 100)
+                display_tab('Reel Label (Small)', 100)
                
             with tab2:
                 peraing = df_f[df_f['Item Name'] == 'Reel Label (Large)'].sort_values(by='Item Name')
                 st.dataframe(peraing,width=2000)
-                display_tab('Reel for Label (Large)', 200)
+                display_tab('Reel Label (Large)', 200)
             with tab3:
                 peraing = df_f[df_f['Item Name'] == 'Ink Reels for Label'].sort_values(by='Item Name')
                 st.dataframe(peraing,width=2000)
