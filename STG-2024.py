@@ -114,9 +114,8 @@ def check_quantities():
 def check_tab_quantities(tab_name, min_quantity):
     
     df_tab = st.session_state.df[st.session_state.df['Item Name'] == tab_name]
-    tab_alerts = df_tab[df_tab['Actual Quantity'] < min_quantity]['Item Name']
+    tab_alerts = df_tab[df_tab['Actual Quantity'] < min_quantity]['Item Name'].tolist()
     return tab_alerts, df_tab
-
 # عرض التبويبات
 def display_tab(tab_name, min_quantity):
     st.header(f'{tab_name}')
