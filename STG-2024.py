@@ -42,6 +42,20 @@ def save_users(users):
         json.dump(users, f)
 users = load_users()
 
+def load_alerts():
+    try:
+        with open('alerts.json', 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+# حفظ التنبيهات إلى ملف JSON
+def save_alerts(alerts):
+    with open('alerts.json', 'w') as f:
+        json.dump(alerts, f)
+
+st.session_state.alerts = load_alerts()
+
 
 # دالة لتسجيل الدخول
 def login(username, password):
@@ -83,27 +97,45 @@ def update_quantity(row_index, quantity, operation, username):
     st.success(f"Quantity updated successfully by {username}! New Quantity: {int(st.session_state.df.loc[row_index, 'Actual Quantity'])}")
     log_entry = {
         'user': username,
-        'time':  datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
+        'time': datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
         'item': st.session_state.df.loc[row_index, 'Item Name'],
         'old_quantity': old_quantity,
         'new_quantity': new_quantity,
-        'operation': operation}
+        'operation': operation
+    }
     st.session_state.logs.append(log_entry)
     
     # حفظ السجلات إلى ملف CSV
     logs_df = pd.DataFrame(st.session_state.logs)
     logs_df.to_csv('logs.csv', index=False)
+    
+    # تحقق من الكميات وتحديث التنبيهات
+    check_quantities()
 
+def check_quantities():
+    new_alerts = []
+    for index, row in st.session_state.df.iterrows():
+        if row['Actual Quantity'] < 100:  # تغيير القيمة حسب الحاجة
+            new_alerts.append(row['Item Name'])
+    
+    st.session_state.alerts = new_alerts
+    save_alerts(st.session_state.alerts)
+
+# دالة للتحقق من الكميات لكل تبويب وعرض التنبيهات
+def check_tab_quantities(tab_name, min_quantity):
+    
+    df_tab = st.session_state.df[st.session_state.df['Item Name'] == tab_name]
+    tab_alerts = df_tab[df_tab['Actual Quantity'] < min_quantity]['Item Name'].tolist()
+    return tab_alerts, df_tab
 
 # عرض التبويبات
-def display_tab(tab_name):
+def display_tab(tab_name, min_quantity):
     st.header(f'{tab_name}')
     row_number = st.number_input(f'Select row number for {tab_name}:', min_value=0, max_value=len(st.session_state.df)-1, step=1, key=f'{tab_name}_row_number')
     
     st.markdown(f"""
     <div style='font-size: 20px; color: blue;'>Selected Item: {st.session_state.df.loc[row_number, 'Item Name']}</div>
     <div style='font-size: 20px; color: blue;'>Current Quantity: {int(st.session_state.df.loc[row_number, 'Actual Quantity'])}</div>
-   
     """, unsafe_allow_html=True)
     
     quantity = st.number_input(f'Enter quantity for {tab_name}:', min_value=1, step=1, key=f'{tab_name}_quantity')
@@ -111,19 +143,26 @@ def display_tab(tab_name):
 
     if st.button('Update Quantity', key=f'{tab_name}_update_button'):
         update_quantity(row_number, quantity, operation, st.session_state.username)
-
+    
+    tab_alerts, df_tab = check_tab_quantities(tab_name, min_quantity)
+    if tab_alerts:
+        st.error(f"Low stock for items in {tab_name}: {', '.join(tab_alerts)}")
+        st.write(f"Items in {tab_name} with low stock:")
+        st.dataframe(
+            df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity'])
+        )
 
 # واجهة تسجيل الدخول
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.logs = []
 if not st.session_state.logged_in:
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3 = st.columns([5, 5,5])
     with col2:
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
-        st.button("Login")
-        login(username, password)
+        if st.button("Login"):
+            login(username, password)
 else:
     if st.session_state.first_login:
         col1, col2, col3 = st.columns([1, 1, 1])
@@ -131,179 +170,130 @@ else:
             st.subheader("Change Password")
             new_password = st.text_input("New Password", type="password")
             confirm_new_password = st.text_input("Confirm Password", type="password")
-            if st.button("login"):
+            if st.button("Change Password"):
                 if not new_password or not confirm_new_password:
                     st.error("Please fill in all the fields.")
                 else:
                     update_password(st.session_state.username, new_password, confirm_new_password)
-                    
-            
     else:
-        st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'> Login by : {users[st.session_state.username]['name']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'>Logged in by: {users[st.session_state.username]['name']}</div>", unsafe_allow_html=True)
         
         # قراءة البيانات
-        if 'df' not in st.session_state:
-            st.session_state.df = pd.read_csv('matril.csv') 
-        try:
-            logs_df = pd.read_csv('logs.csv')
-            st.session_state.logs = logs_df.to_dict('records')
-        except FileNotFoundError:
-            st.session_state.logs = []
-
-        
-        page =  st.sidebar.radio('Select page', ['area','View Logs'])
-       
-        if page == 'area':
-            def main():
-                
-                st.markdown("""
+           
+    if 'df' not in st.session_state:
+        st.session_state.df = pd.read_csv('matril.csv')
+    try:
+        logs_df = pd.read_csv('logs.csv')
+        st.session_state.logs = logs_df.to_dict('records')
+    except FileNotFoundError:
+        st.session_state.logs = []
+    st.markdown("""
             <style>
-                /* Add your custom CSS styles here */
-                .stProgress > div > div > div {
-                    background-color: #FFD700; /* Change the color of the loading spinner */
-                    border-radius: 50%; /* Make the loading spinner circular */
+                .main {
+                    padding: 0rem 1rem;
+                    width: 200%;
+                }
+                .stApp {
+                    overflow: hidden;
                 }
             </style>
-        """, unsafe_allow_html=True)
-                with st.spinner("Data loaded successfully!"):
-                    import time
-                    time.sleep(1)
-        
-                
-                col1, col2 = st.columns([2, 0.75])
-                with col1:
-                    st.markdown("""
-                        <h2 style='text-align: center; font-size: 40px; color: red;'>
-                            Find your Mechanical parts
-                        </h2>
-                    """, unsafe_allow_html=True)
-                
-                with col2:
-                    # Retrieve or initialize search keyword from session state
-                    search_keyword = st.session_state.get('search_keyword', '')
-                    search_keyword = st.text_input("Enter keyword to search:", search_keyword)
-                    search_button = st.button("Search")
-                    search_option = 'All Columns'
-                def search_in_dataframe(df_f, keyword, option):
-                    if option == 'All Columns':
-                        result = df_f[df_f.apply(lambda row: row.astype(str).str.contains(keyword, case=False).any(), axis=1)]
-                    else:
-                        result = df_f[df_f[option].astype(str).str.contains(keyword, case=False)]
-                    return result
-                
-                # Clear search keyword on page refresh
-                if st.session_state.get('refreshed', False):
-                    st.session_state.search_keyword = ''
-                    st.session_state.refreshed = False
-                
-                # Perform search if button is clicked and keyword is not empty
-                if search_button and search_keyword:
-                    # Update session state with current search keyword
-                    st.session_state.search_keyword = search_keyword
-                    search_results = search_in_dataframe(df_f, search_keyword, search_option)
-                    st.write(f"Search results for '{search_keyword}' in {search_option}:")
-                    st.dataframe(search_results, width=1000, height=200)
-                # Set refreshed state to clear search keyword on page refresh
-                st.session_state.refreshed = True 
-                
-                        
-                tab1, tab2 ,tab3, tab4,tab5, tab6 ,tab7  = st.tabs(['Reel for Item Label (Small)', 'Reel for Item Label (Large)',
-                'Ink Reels for Item Label','Red Tape','Adhasive Tape','Cartridges','MultiPharma Cartridge'])
-                
-                with tab1:
-                    col1, col2, col3 = st.columns([30,3,13])
-                    with col1:
-                        Small = df_f[df_f['Item Name'] == 'Reel for Item Label (Small)'].sort_values(by='Item Name')
-                        st.dataframe(Small,width=2000)
-                        col4, col5, col6 = st.columns([2,1,2])
-                        with col4:
-                            display_tab('Small')
-                    with col3:
-                        st.subheader('image  for  these  part')
-
-                with tab2:
-                    col1, col2, col3 = st.columns([30,3,13])
-                    with col1:
-                        Large = df_f[df_f['Item Name'] == 'Reel for Item Label (Large)'].sort_values(by='Item Name')
-                        st.dataframe(Large,width=2000)
-                        col4, col5, col6 = st.columns([2,1,2])
-                        with col4:
-                            display_tab('Large')
-                    with col3:
-                        st.subheader('image  for  these  part')
-
-                with tab3:
-                    col1, col2, col3 = st.columns([30,3,13])
-                    with col1:
-                        Ink = df_f[df_f['Item Name'] == 'Ink Reels for Item Label'].sort_values(by='Item Name')
-                        st.dataframe(Ink,width=2000)
-                        col4, col5, col6 = st.columns([2,1,2])
-                        with col4:
-                            display_tab('Ink')
-                    with col3:
-                        st.subheader('image  for  these  part')
-
-                with tab4:
-                    col1, col2, col3 = st.columns([30,3,13])
-                    with col1:
-                        Tape = df_f[df_f['Item Name'] == 'Red Tape'].sort_values(by='Item Name')
-                        st.dataframe(Tape,width=2000)
-                        col4, col5, col6 = st.columns([2,1,2])
-                        with col4:
-                            display_tab('Tape')
-                    with col3:
-                        st.subheader('image  for  these  part')
-
-                with tab5:
-                        col1, col2, col3 = st.columns([30,3,13])
-                        with col1:
-                            Adhasive = df_f[df_f['Item Name'] == 'Adhasive Tape'].sort_values(by='Item Name')
-                            st.dataframe(Adhasive,width=2000)
-                            col4, col5, col6 = st.columns([2,1,2])
-                            with col4:
-                                display_tab('Adhasive')
-                        with col3:
-                            st.subheader('image  for  these  part')
-
-                with tab6:
-                    col1, col2, col3 = st.columns([30,3,13])
-                    with col1:
-                        Cartridges = df_f[df_f['Item Name'] == 'Cartridges'].sort_values(by='Item Name')
-                        st.dataframe(Cartridges,width=2000)
-                        col4, col5, col6 = st.columns([2,1,2])
-                        with col4:
-                            display_tab('Cartridges')
-                    with col3:
-                        st.subheader('image  for  these  part')
-
-                with tab7:
-                        col1, col2, col3 = st.columns([30,3,13])
-                        with col1:
-                            MultiPharma = df_f[df_f['Item Name'] == 'MultiPharma Cartridge'].sort_values(by='Item Name')
-                            st.dataframe(MultiPharma,width=2000)
-                            col4, col5, col6 = st.columns([2,1,2])
-                            with col4:
-                                display_tab('MultiPharma')
-                        with col3:
-                            st.subheader('image  for  these  part')
-                        
-            if __name__ == '__main__':
-
-                main()
-
-        elif page == 'View Logs':
-                def main():
-                    st.header('User Activity Logs')
-                    if st.session_state.logs:
-                        logs_df = pd.DataFrame(st.session_state.logs)
-                        st.dataframe(logs_df)
-                        csv = logs_df.to_csv(index=False)
-                        st.download_button(label="Download Logs as sheet", data=csv, file_name='user_logs.csv', mime='text/csv')
-                        
+            """, unsafe_allow_html=True)
     
-                    else:
-                        st.write("No logs available.")
-        
-                if __name__ == '__main__':
-                    
-                    main()
+             
+    page = st. sidebar.radio('Select page', ['area', 'View Logs'])
+    
+    if page == 'area':
+        def main():
+            st.markdown("""
+            <style>
+                .stProgress > div > div > div {
+                    background-color: #FFD700;
+                    border-radius: 50%;
+                }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            with st.spinner("Data loaded successfully!"):
+                import time
+                time.sleep(1)
+            
+            col1, col2 = st.columns([2, 0.75])
+            with col1:
+                st.markdown("""
+                    <h2 style='text-align: center; font-size: 40px; color: red;'>
+                        Find your Mechanical parts
+                    </h2>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                search_keyword = st.session_state.get('search_keyword', '')
+                search_keyword = st.text_input("Enter keyword to search:", search_keyword)
+                search_button = st.button("Search")
+                search_option = 'All Columns'
+            
+            def search_in_dataframe(df_f, keyword, option):
+                if option == 'All Columns':
+                    result = df_f[df_f.apply(lambda row: row.astype(str).str.contains(keyword, case=False).any(), axis=1)]
+                else:
+                    result = df_f[df_f[option].astype(str).str.contains(keyword, case=False)]
+                return result
+            
+            if st.session_state.get('refreshed', False):
+                st.session_state.search_keyword = ''
+                st.session_state.refreshed = False
+            
+            if search_button and search_keyword:
+                st.session_state.search_keyword = search_keyword
+                search_results = search_in_dataframe(st.session_state.df, search_keyword, search_option)
+                st.write(f"Search results for '{search_keyword}' in {search_option}:")
+                st.dataframe(search_results, width=1000, height=200)
+            st.session_state.refreshed = True 
+            
+            tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+                'Reel for Item Label (Small)', 'Reel for Item Label (Large)',
+                'Ink Reels for Item Label', 'Red Tape', 'Adhasive Tape', 'Cartridges', 'MultiPharma Cartridge'
+            ])
+            
+            with tab1:
+                peraing = df_f[df_f['Item Name'] == 'Reel for Item Label (Small)'].sort_values(by='Item Name')
+                st.dataframe(peraing,width=2000)
+                display_tab('Reel for Item Label (Small)', 100)
+               
+            with tab2:
+                peraing = df_f[df_f['Item Name'] == 'Reel for Item Label (Large)'].sort_values(by='Item Name')
+                st.dataframe(peraing,width=2000)
+                display_tab('Reel for Item Label (Large)', 200)
+            with tab3:
+                peraing = df_f[df_f['Item Name'] == 'Ink Reels for Item Label'].sort_values(by='Item Name')
+                st.dataframe(peraing,width=2000)
+                display_tab('Ink Reels for Item Label', 150)
+            with tab4:
+                peraing = df_f[df_f['Item Name'] == 'Red Tape'].sort_values(by='Item Name')
+                st.dataframe(peraing,width=2000)
+                display_tab('Red Tape', 50)
+            with tab5:
+                peraing = df_f[df_f['Item Name'] == 'Adhasive Tape'].sort_values(by='Item Name')
+                st.dataframe(peraing,width=2000)
+                display_tab('Adhasive Tape', 75)
+            with tab6:
+                peraing = df_f[df_f['Item Name'] == 'Cartridges'].sort_values(by='Item Name')
+                st.dataframe(peraing,width=2000)
+                display_tab('Cartridges', 80)
+            with tab7:
+                peraing = df_f[df_f['Item Name'] == 'MultiPharma Cartridge'].sort_values(by='Item Name')
+                st.dataframe(peraing,width=2000)
+                display_tab('MultiPharma Cartridge', 120)
+    
+            if st.session_state.alerts:
+                st.error(f"Low stock for items: {', '.join(st.session_state.alerts)}")
+    
+        if __name__ == '__main__':
+            main()
+    
+    elif page == 'View Logs':
+        st.header('Logs')
+        if st.session_state.logs:
+            logs_df = pd.DataFrame(st.session_state.logs)
+            st.dataframe(logs_df, width=1000, height=400)
+        else:
+            st.write("No logs available.")
