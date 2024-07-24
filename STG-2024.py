@@ -275,6 +275,7 @@ else:
                 if st.session_state.alerts:
                     st.error(f"Low stock for items: {', '.join(st.session_state.alerts)}")
         
+            if __name__ == '__main__':
             main()
         
         elif page == 'View Logs':
