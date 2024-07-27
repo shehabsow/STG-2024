@@ -8,7 +8,7 @@ import os
 
 st.set_page_config(
     layout="wide",
-    page_title='warehouse',
+    page_title='STG-2024',
     page_icon='🪙')
 
 
