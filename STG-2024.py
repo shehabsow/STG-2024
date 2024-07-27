@@ -1,63 +1,61 @@
-
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import streamlit as st
 import pandas as pd
-import numpy as np
 import pytz
-import requests
 from datetime import datetime, timedelta
 import json
+import csv
 import os
+
 st.set_page_config(
     layout="wide",
-    page_title='STG-2024',
+    page_title='warehouse',
     page_icon='🪙')
 
 
+
+
 egypt_tz = pytz.timezone('Africa/Cairo')
-df_f = pd.read_csv('matril.csv')
+df_Material = pd.read_csv('matril.csv')
+#df_BIN = pd.read_csv('LOCATION.csv')
+#df_Receving = pd.read_csv('Receving.csv')
 
-
-
+# Load users data
 def load_users():
     try:
-        with open('users5.json', 'r') as f:
+        with open('users.json', 'r') as f:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return {
             "knhp322": {"password": "knhp322", "first_login": True, "name": "Shehab Ayman", "last_password_update": str(datetime.now(egypt_tz))},
-            "krxs742": {"password": "krxs742", "first_login": True, "name": "Mohamed Ashry", "last_password_update": str(datetime.now(egypt_tz))},
+            "karm": {"password": "karm", "first_login": True, "name": "karm", "last_password_update": str(datetime.now(egypt_tz))},
             "kxsv748": {"password": "kxsv748", "first_login": True, "name": "Mohamed El masry", "last_password_update": str(datetime.now(egypt_tz))},
             "kvwp553": {"password": "kvwp553", "first_login": True, "name": "sameh", "last_password_update": str(datetime.now(egypt_tz))},
             "knfb489": {"password": "knfb489", "first_login": True, "name": "Yasser Hassan", "last_password_update": str(datetime.now(egypt_tz))},
             "kjjd308": {"password": "kjjd308", "first_login": True, "name": "Kaleed", "last_password_update": str(datetime.now(egypt_tz))},
             "kibx268": {"password": "kibx268", "first_login": True, "name": "Zeinab Mobarak", "last_password_update": str(datetime.now(egypt_tz))},
             "engy": {"password": "1234", "first_login": True, "name": "D.Engy", "last_password_update": str(datetime.now(egypt_tz))}
-        } 
+        }
 
-# حفظ بيانات المستخدمين إلى ملف JSON
+# Save users data to JSON file
 def save_users(users):
-    with open('users5.json', 'w') as f:
+    with open('users.json', 'w') as f:
         json.dump(users, f)
-users = load_users()
 
-def load_alerts():
+# Load logs from files
+def load_logs():
     try:
-        with open('alerts.json', 'r') as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
+        logs_location = pd.read_csv('logs_location.csv').to_dict('records')
+    except FileNotFoundError:
+        logs_location = []
+    
+    try:
+        logs_receving = pd.read_csv('logs_receving.csv').to_dict('records')
+    except FileNotFoundError:
+        logs_receving = []
 
-# حفظ التنبيهات إلى ملف JSON
-def save_alerts(alerts):
-    with open('alerts.json', 'w') as f:
-        json.dump(alerts, f)
+    return logs_location, logs_receving
 
-st.session_state.alerts = load_alerts()
-
-
-# دالة لتسجيل الدخول
+# Login function
 def login(username, password):
     if username in users and users[username]["password"] == password:
         st.session_state.logged_in = True
@@ -71,9 +69,8 @@ def login(username, password):
     else:
         st.error("Incorrect username or password")
 
-
-# دالة لتحديث كلمة المرور
-def update_password(username, new_password,confirm_new_password):
+# Update password function
+def update_password(username, new_password, confirm_new_password):
     if new_password == confirm_new_password:
         users[username]["password"] = new_password
         users[username]["first_login"] = False
@@ -83,7 +80,20 @@ def update_password(username, new_password,confirm_new_password):
         st.session_state.password_expired = False
         st.success("Password updated successfully!")
     else:
-        st.error("! Passwords do not match")
+        st.error("Passwords do not match!")
+
+# Function to add new location
+def update_password(username, new_password, confirm_new_password):
+    if new_password == confirm_new_password:
+        users[username]["password"] = new_password
+        users[username]["first_login"] = False
+        users[username]["last_password_update"] = str(datetime.now(egypt_tz))
+        save_users(users)
+        st.session_state.first_login = False
+        st.session_state.password_expired = False
+        st.success("Password updated successfully!")
+    else:
+        st.error("Passwords do not match!")
         
 # دالة لتحديث الكمية
 def update_quantity(row_index, quantity, operation, username):
@@ -151,7 +161,7 @@ def display_tab(tab_name, min_quantity):
         st.dataframe(
             df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity'])
         )
-
+users = load_users()
 # واجهة تسجيل الدخول
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
