@@ -162,6 +162,32 @@ def display_tab(tab_name, min_quantity):
             df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity'])
         )
 users = load_users()
+def display_batch_confirmation():
+    st.header("Batch Confirmation")
+    batch_number = st.text_input("Enter Batch Number:")
+    
+    if st.button("Confirm Batch"):
+        batch_df = st.session_state.df[st.session_state.df['Batch Number'] == batch_number]
+        if not batch_df.empty:
+            st.success(f"Batch {batch_number} confirmed successfully!")
+            log_entry = {
+                'user': st.session_state.username,
+                'time': datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
+                'batch_number': batch_number,
+                'operation': 'confirm'
+            }
+            st.session_state.logs.append(log_entry)
+            
+            # Save logs to CSV
+            logs_df = pd.DataFrame(st.session_state.logs)
+            logs_df.to_csv('logs.csv', index=False)
+            
+            # Highlight confirmed batch
+            st.dataframe(
+                batch_df.style.apply(lambda x: ['background-color: green' if v == batch_number else '' for v in x], subset=['Batch Number'])
+            )
+        else:
+            st.error(f"Batch {batch_number} not found!")
 # واجهة تسجيل الدخول
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
