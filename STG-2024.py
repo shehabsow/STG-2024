@@ -55,6 +55,10 @@ def load_logs():
 
     return logs_location, logs_receving
 
+def save_alerts(alerts):
+    with open('alerts.json', 'w') as f:
+        json.dump(alerts, f)
+
 # Login function
 def login(username, password):
     if username in users and users[username]["password"] == password:
