@@ -272,37 +272,37 @@ else:
                 with tab2:
                     peraing = df_Material[df_Material['Item Name'] == 'Reel Label (Large)'].sort_values(by='Item Name')
                     st.dataframe(peraing,width=2000)
-                    col4, col5, col6 = st.columns([1,1,2])
+                    col4, col5, col6 = st.columns([2,2,2])
                     with col4:
                         display_tab('Reel Label (Large)', 200)
                 with tab3:
                     peraing = df_Material[df_Material['Item Name'] == 'Ink Reels for Label'].sort_values(by='Item Name')
                     st.dataframe(peraing,width=2000)
-                    col4, col5, col6 = st.columns([1,1,2])
+                    col4, col5, col6 = st.columns([2,2,2])
                     with col4:
                         display_tab('Ink Reels for Label', 150)
                 with tab4:
                     peraing = df_Material[df_Material['Item Name'] == 'Red Tape'].sort_values(by='Item Name')
                     st.dataframe(peraing,width=2000)
-                    col4, col5, col6 = st.columns([1,1,2])
+                    col4, col5, col6 = st.columns([v])
                     with col4:
                         display_tab('Red Tape', 50)
                 with tab5:
                     peraing = df_Material[df_Material['Item Name'] == 'Adhasive Tape'].sort_values(by='Item Name')
                     st.dataframe(peraing,width=2000)
-                    col4, col5, col6 = st.columns([2,1,2])
+                    col4, col5, col6 = st.columns([2,2,2])
                     with col4:
                         display_tab('Adhasive Tape', 75)
                 with tab6:
                     peraing = df_Material[df_Material['Item Name'] == 'Cartridges'].sort_values(by='Item Name')
                     st.dataframe(peraing,width=2000)
-                    col4, col5, col6 = st.columns([2,1,2])
+                    col4, col5, col6 = st.columns([2,2,2])
                     with col4:
                         display_tab('Cartridges', 80)
                 with tab7:
                     peraing = df_Material[df_Material['Item Name'] == 'MultiPharma Cartridge'].sort_values(by='Item Name')
                     st.dataframe(peraing,width=2000)
-                    col4, col5, col6 = st.columns([2,1,2])
+                    col4, col5, col6 = st.columns([2,2,2])
                     with col4:
                         display_tab('MultiPharma Cartridge', 120)
         
