@@ -265,12 +265,15 @@ else:
                 with tab1:
                     peraing = df_Material[df_Material['Item Name'] == 'Reel Label (Small)'].sort_values(by='Item Name')
                     st.dataframe(peraing,width=2000)
+                    
                     display_tab('Reel Label (Small)', 100)
                    
                 with tab2:
                     peraing = df_Material[df_Material['Item Name'] == 'Reel Label (Large)'].sort_values(by='Item Name')
                     st.dataframe(peraing,width=2000)
-                    display_tab('Reel Label (Large)', 200)
+                    col4, col5, col6 = st.columns([2,1,2])
+                    with col4:
+                        display_tab('Reel Label (Large)', 200)
                 with tab3:
                     peraing = df_Material[df_Material['Item Name'] == 'Ink Reels for Label'].sort_values(by='Item Name')
                     st.dataframe(peraing,width=2000)
