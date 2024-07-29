@@ -284,7 +284,7 @@ else:
                 with tab4:
                     peraing = df_Material[df_Material['Item Name'] == 'Red Tape'].sort_values(by='Item Name')
                     st.dataframe(peraing,width=2000)
-                    col4, col5, col6 = st.columns([v])
+                    col4, col5, col6 = st.columns([2,2,2])
                     with col4:
                         display_tab('Red Tape', 50)
                 with tab5:
