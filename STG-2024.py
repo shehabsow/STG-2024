@@ -80,18 +80,7 @@ def update_password(username, new_password, confirm_new_password):
     else:
         st.error("Passwords do not match!")
 
-# Function to add new location
-def update_password(username, new_password, confirm_new_password):
-    if new_password == confirm_new_password:
-        users[username]["password"] = new_password
-        users[username]["first_login"] = False
-        users[username]["last_password_update"] = str(datetime.now(egypt_tz))
-        save_users(users)
-        st.session_state.first_login = False
-        st.session_state.password_expired = False
-        st.success("Password updated successfully!")
-    else:
-        st.error("Passwords do not match!")
+
         
 # دالة لتحديث الكمية
 def update_quantity(row_index, quantity, operation, username):
@@ -166,7 +155,7 @@ if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.logs = []
 if not st.session_state.logged_in:
-    col1, col2, col3 = st.columns([5, 5,5])
+    col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
@@ -196,19 +185,7 @@ else:
             st.session_state.logs = logs_df.to_dict('records')
         except FileNotFoundError:
             st.session_state.logs = []
-        st.markdown("""
-                <style>
-                    .main {
-                        padding: 0rem 1rem;
-                        width: 200%;
-                    }
-                    .stApp {
-                        overflow: hidden;
-                    }
-                </style>
-                """, unsafe_allow_html=True)
-        
-                 
+                
         page = st. sidebar.radio('Select page', ['STG-2024', 'View Logs'])
         
         if page == 'STG-2024':
@@ -264,45 +241,45 @@ else:
                 ])
                 
                 with tab1:
-                    peraing = df_Material[df_Material['Item Name'] == 'Reel Label (Small)'].sort_values(by='Item Name')
-                    st.dataframe(peraing,width=2000)
+                    Small = df_Material[df_Material['Item Name'] == 'Reel Label (Small)'].sort_values(by='Item Name')
+                    st.dataframe(Small,width=2000)
                     col4, col5, col6 = st.columns([2,1,2])
                     with col4:
                         display_tab('Reel Label (Small)', 100)
                    
                 with tab2:
-                    peraing = df_Material[df_Material['Item Name'] == 'Reel Label (Large)'].sort_values(by='Item Name')
-                    st.dataframe(peraing,width=2000)
+                    Large = df_Material[df_Material['Item Name'] == 'Reel Label (Large)'].sort_values(by='Item Name')
+                    st.dataframe(Large,width=2000)
                     col4, col5, col6 = st.columns([2,1,2])
                     with col4:
                         display_tab('Reel Label (Large)', 200)
                 with tab3:
-                    peraing = df_Material[df_Material['Item Name'] == 'Ink Reels for Label'].sort_values(by='Item Name')
-                    st.dataframe(peraing,width=2000)
+                    Ink = df_Material[df_Material['Item Name'] == 'Ink Reels for Label'].sort_values(by='Item Name')
+                    st.dataframe(Ink,width=2000)
                     col4, col5, col6 = st.columns([2,1,2])
                     with col4:
                         display_tab('Ink Reels for Label', 150)
                 with tab4:
-                    peraing = df_Material[df_Material['Item Name'] == 'Red Tape'].sort_values(by='Item Name')
-                    st.dataframe(peraing,width=2000)
+                    Tape = df_Material[df_Material['Item Name'] == 'Red Tape'].sort_values(by='Item Name')
+                    st.dataframe(Tape,width=2000)
                     col4, col5, col6 = st.columns([2,1,2])
                     with col4:
                         display_tab('Red Tape', 50)
                 with tab5:
-                    peraing = df_Material[df_Material['Item Name'] == 'Adhasive Tape'].sort_values(by='Item Name')
-                    st.dataframe(peraing,width=2000)
+                    Adhasive = df_Material[df_Material['Item Name'] == 'Adhasive Tape'].sort_values(by='Item Name')
+                    st.dataframe(Adhasive,width=2000)
                     col4, col5, col6 = st.columns([2,2,2])
                     with col4:
                         display_tab('Adhasive Tape', 75)
                 with tab6:
-                    peraing = df_Material[df_Material['Item Name'] == 'Cartridges'].sort_values(by='Item Name')
-                    st.dataframe(peraing,width=2000)
+                    Cartridges = df_Material[df_Material['Item Name'] == 'Cartridges'].sort_values(by='Item Name')
+                    st.dataframe(Cartridges,width=2000)
                     col4, col5, col6 = st.columns([2,1,2])
                     with col4:
                         display_tab('Cartridges', 80)
                 with tab7:
-                    peraing = df_Material[df_Material['Item Name'] == 'MultiPharma Cartridge'].sort_values(by='Item Name')
-                    st.dataframe(peraing,width=2000)
+                    MultiPharma = df_Material[df_Material['Item Name'] == 'MultiPharma Cartridge'].sort_values(by='Item Name')
+                    st.dataframe(MultiPharma,width=2000)
                     col4, col5, col6 = st.columns([2,1,2])
                     with col4:
                         display_tab('MultiPharma Cartridge', 120)
