@@ -154,6 +154,10 @@ users = load_users()
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.logs = []
+
+if 'logs' not in st.session_state:
+    st.session_state.logs = load_logs()[0]
+    
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
