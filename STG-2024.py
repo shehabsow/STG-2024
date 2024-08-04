@@ -144,10 +144,8 @@ def display_tab(tab_name, min_quantity):
     tab_alerts, df_tab = check_tab_quantities(tab_name, min_quantity)
     if tab_alerts:
         st.error(f"Low stock for items in {tab_name}:")
-        st.write(f"Items in {tab_name} with low stock:")
-        st.dataframe(
-            df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity'])
-        )
+        st.dataframe(df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity']))
+        
 users = load_users()
 
 # واجهة تسجيل الدخول
