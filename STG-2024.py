@@ -153,9 +153,13 @@ def check_tab_quantities(tab_name, min_quantity):
     
     df_tab = st.session_state.df[st.session_state.df['Item Name'] == tab_name]
     tab_alerts = df_tab[df_tab['Actual Quantity'] < min_quantity]['Item Name'].tolist()
-    subject = "Low Stock Alert"
-    body = f"The item {row['Item Name']} has reached a low stock level of {row['Actual Quantity']}."
-    send_email(subject, body, "shehab.ayman@astrazeneca.com")  # تغيير إلى البريد الإلكتروني للمستخدم
+    for item in tab_alerts:
+        # إرسال بريد إلكتروني للمستخدم
+        row = df_tab[df_tab['Item Name'] == item].iloc[0]
+        subject = "Low Stock Alert"
+        body = f"The item {row['Item Name']} has reached a low stock level of {row['Actual Quantity']}."
+        send_email(subject, body, "shehab.ayman@astrazeneca.com")
+   
     
     return tab_alerts, df_tab
 
