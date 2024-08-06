@@ -112,11 +112,38 @@ def update_quantity(row_index, quantity, operation, username):
     # تحقق من الكميات وتحديث التنبيهات
     check_quantities()
 
+def send_email(subject, body, to_email):
+    from_email = "shehab.ayman@astrazeneca.com"  # استخدم بريدك الإلكتروني
+    from_password = "your"  # استخدم كلمة المرور الخاصة ببريدك الإلكتروني
+
+    # إنشاء الرسالة
+    msg = MIMEMultipart()
+    msg['From'] = from_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+
+    # إضافة نص الرسالة
+    msg.attach(MIMEText(body, 'plain'))
+
+    # إعداد الخادم وإرسال البريد الإلكتروني
+    try:
+        server = smtplib.SMTP('smtp.office365.com', 587)  # خادم SMTP لـ Outlook
+        server.starttls()
+        server.login(from_email, from_password)
+        server.send_message(msg)
+        server.quit()
+        st.success(f"Alert email sent to {to_email}")
+    except Exception as e:
+        st.error(f"Failed to send email: {str(e)}")
+
 def check_quantities():
     new_alerts = []
     for index, row in st.session_state.df.iterrows():
         if row['Actual Quantity'] < 100:  # تغيير القيمة حسب الحاجة
             new_alerts.append(row['Item Name'])
+            subject = "Low Stock Alert"
+            body = f"The item {row['Item Name']} has reached a low stock level of {row['Actual Quantity']}."
+            send_email(subject, body, "shehab.ayman@astrazeneca.com")
     
     st.session_state.alerts = new_alerts
     save_alerts(st.session_state.alerts)
@@ -126,6 +153,10 @@ def check_tab_quantities(tab_name, min_quantity):
     
     df_tab = st.session_state.df[st.session_state.df['Item Name'] == tab_name]
     tab_alerts = df_tab[df_tab['Actual Quantity'] < min_quantity]['Item Name'].tolist()
+    subject = "Low Stock Alert"
+    body = f"The item {row['Item Name']} has reached a low stock level of {row['Actual Quantity']}."
+    send_email(subject, body, "shehab.ayman@astrazeneca.com")  # تغيير إلى البريد الإلكتروني للمستخدم
+    
     return tab_alerts, df_tab
 
 # عرض التبويبات
