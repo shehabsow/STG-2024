@@ -125,7 +125,6 @@ def send_email(subject, body, to_email):
     try:
         server = smtplib.SMTP('smtp.office365.com', 587)  # خادم SMTP لـ Outlook
         server.starttls()
-        server.login(from_email)
         server.send_message(msg)
         server.quit()
         st.success(f"Alert email sent to {to_email}")
