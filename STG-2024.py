@@ -8,66 +8,11 @@ import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import requests
-from msal import ConfidentialClientApplication
+
 st.set_page_config(
     layout="wide",
     page_title='STG-2024',
     page_icon='🪙')
-
-CLIENT_ID = 'your_client_id'
-CLIENT_SECRET = 'your_client_secret'
-TENANT_ID = 'your_tenant_id'
-AUTHORITY = f'https://login.microsoftonline.com/{TENANT_ID}'
-SCOPE = ['https://graph.microsoft.com/.default']
-EMAIL_ENDPOINT = 'https://graph.microsoft.com/v1.0/me/sendMail'
-def get_access_token():
-    url = f"{AUTHORITY}/oauth2/v2.0/token"
-    headers = {
-        'Content-Type': 'application/x-www-form-urlencoded'
-    }
-    data = {
-        'client_id': CLIENT_ID,
-        'scope': ' '.join(SCOPE),
-        'client_secret': CLIENT_SECRET,
-        'grant_type': 'client_credentials'
-    }
-    response = requests.post(url, headers=headers, data=data)
-    response_json = response.json()
-    if 'access_token' in response_json:
-        return response_json['access_token']
-    else:
-        raise Exception("Failed to obtain access token")
-
-# دالة لإرسال البريد الإلكتروني
-def send_email(subject, body, to_email):
-    access_token = get_access_token()
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-        'Content-Type': 'application/json'
-    }
-    email_data = {
-        "message": {
-            "subject": subject,
-            "body": {
-                "contentType": "Text",
-                "content": body
-            },
-            "toRecipients": [
-                {
-                    "emailAddress": {
-                        "address": to_email
-                    }
-                }
-            ]
-        }
-    }
-    
-    response = requests.post(EMAIL_ENDPOINT, headers=headers, data=json.dumps(email_data))
-    if response.status_code == 202:
-        st.success(f"Alert email sent to {to_email}")
-    else:
-        st.error(f"Failed to send email: {response.status_code}, {response.text}")
 
 egypt_tz = pytz.timezone('Africa/Cairo')
 df_Material = pd.read_csv('matril.csv')
@@ -163,7 +108,29 @@ def update_quantity(row_index, quantity, operation, username):
     
     # تحقق من الكميات وتحديث التنبيهات
     check_quantities()
+def send_email(subject, body, to_email):
+    from_email = "shehab.ayman@astrazeneca.com"  # استخدم بريدك الإلكتروني
 
+
+    # إنشاء الرسالة
+    msg = MIMEMultipart()
+    msg['From'] = from_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+
+    # إضافة نص الرسالة
+    msg.attach(MIMEText(body, 'plain'))
+
+    # إعداد الخادم وإرسال البريد الإلكتروني
+    try:
+        server = smtplib.SMTP('smtp.office365.com', 587)  # خادم SMTP لـ Outlook
+        server.starttls()
+        server.login(from_email)
+        server.send_message(msg)
+        server.quit()
+        st.success(f"Alert email sent to {to_email}")
+    except Exception as e:
+        st.error(f"Failed to send email: {str(e)}")
 
 def check_quantities():
     new_alerts = []
