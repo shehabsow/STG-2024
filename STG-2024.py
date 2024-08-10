@@ -3,113 +3,150 @@ import pandas as pd
 import pytz
 from datetime import datetime, timedelta
 import json
-import csv
-import os
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import sqlite3
+
+def create_database():
+    conn = sqlite3.connect('my_database.db')
+    c = conn.cursor()
+
+    # إنشاء جدول للمواد
+    c.execute('''
+    CREATE TABLE IF NOT EXISTS materials (
+        item_name TEXT,
+        actual_quantity INTEGER
+    )
+    ''')
+
+    # إنشاء جدول للسجلات
+    c.execute('''
+    CREATE TABLE IF NOT EXISTS logs (
+        user TEXT,
+        time TEXT,
+        item TEXT,
+        old_quantity INTEGER,
+        new_quantity INTEGER,
+        operation TEXT
+    )
+    ''')
+
+    # إنشاء جدول للمستخدمين
+    c.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        username TEXT PRIMARY KEY,
+        password TEXT,
+        first_login BOOLEAN,
+        name TEXT,
+        last_password_update TEXT
+    )
+    ''')
+
+    conn.commit()
+    conn.close()
+
+create_database()
+
+
+def load_csv_to_database(csv_file, table_name):
+    conn = sqlite3.connect('my_database.db')
+    df = pd.read_csv(csv_file)
+    df.to_sql(table_name, conn, if_exists='replace', index=False)
+    conn.close()
+
+# تحميل ملفات CSV إلى قاعدة البيانات
+load_csv_to_database('matril.csv', 'materials')
+
 st.set_page_config(
     layout="wide",
     page_title='STG-2024',
     page_icon='🪙')
 
 egypt_tz = pytz.timezone('Africa/Cairo')
-df_Material = pd.read_csv('matril.csv')
-#df_BIN = pd.read_csv('LOCATION.csv')
-#df_Receving = pd.read_csv('Receving.csv')
 
-# Load users data
+def load_data_from_database(table_name):
+    conn = sqlite3.connect('my_database.db')
+    df = pd.read_sql_query(f'SELECT * FROM {table_name}', conn)
+    conn.close()
+    return df
+
+df_Material = load_data_from_database('materials')
+df_logs_location = load_data_from_database('logs_location')
+df_logs_receving = load_data_from_database('logs_receving')
+
+# تابع تحميل المستخدمين من قاعدة البيانات
 def load_users():
-    try:
-        with open('users1.json', 'r') as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {
-            "knhp322": {"password": "knhp322", "first_login": True, "name": "Shehab Ayman", "last_password_update": str(datetime.now(egypt_tz))},
-            "KFXW551": {"password": "KFXW551", "first_login": True, "name": " Hossameldin Mostafa", "last_password_update": str(datetime.now(egypt_tz))},
-            "knvp968": {"password": "knvp968", "first_login": True, "name": "  Mohamed Nader", "last_password_update": str(datetime.now(egypt_tz))},
-            "kcqw615": {"password": "kcqw615", "first_login": True, "name": "Tareek Mahmoud ", "last_password_update": str(datetime.now(egypt_tz))}}
+    conn = sqlite3.connect('my_database.db')
+    df = pd.read_sql_query('SELECT * FROM users', conn)
+    conn.close()
+    users = df.set_index('username').to_dict(orient='index')
+    return {username: {
+        'password': user['password'],
+        'first_login': user['first_login'],
+        'name': user['name'],
+        'last_password_update': user['last_password_update']
+    } for username, user in users.items()}
 
-# Save users data to JSON file
 def save_users(users):
-    with open('users1.json', 'w') as f:
-        json.dump(users, f)
+    conn = sqlite3.connect('my_database.db')
+    c = conn.cursor()
+    for username, user_data in users.items():
+        c.execute('''
+        INSERT OR REPLACE INTO users (username, password, first_login, name, last_password_update)
+        VALUES (?, ?, ?, ?, ?)
+        ''', (username, user_data['password'], user_data['first_login'], user_data['name'], user_data['last_password_update']))
+    conn.commit()
+    conn.close()
 
-# Load logs from files
-def load_logs():
-    try:
-        logs_location = pd.read_csv('logs_location.csv').to_dict('records')
-    except FileNotFoundError:
-        logs_location = []
-    
-    try:
-        logs_receving = pd.read_csv('logs_receving.csv').to_dict('records')
-    except FileNotFoundError:
-        logs_receving = []
+def save_logs(log_entries):
+    conn = sqlite3.connect('my_database.db')
+    c = conn.cursor()
+    for entry in log_entries:
+        c.execute('''
+        INSERT INTO logs (user, time, item, old_quantity, new_quantity, operation)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ''', (entry['user'], entry['time'], entry['item'], entry['old_quantity'], entry['new_quantity'], entry['operation']))
+    conn.commit()
+    conn.close()
 
-    return logs_location, logs_receving
-
-def save_alerts(alerts):
-    with open('alerts.json', 'w') as f:
-        json.dump(alerts, f)
-
-# Login function
-def login(username, password):
-    if username in users and users[username]["password"] == password:
-        st.session_state.logged_in = True
-        st.session_state.username = username
-        st.session_state.first_login = users[username]["first_login"]
-        last_password_update = datetime.strptime(users[username]["last_password_update"], '%Y-%m-%d %H:%M:%S.%f%z')
-        if datetime.now(egypt_tz) - last_password_update > timedelta(days=30):
-            st.session_state.password_expired = True
-        else:
-            st.session_state.password_expired = False
-    else:
-        st.error("Incorrect username or password")
-
-# Update password function
-def update_password(username, new_password, confirm_new_password):
-    if new_password == confirm_new_password:
-        users[username]["password"] = new_password
-        users[username]["first_login"] = False
-        users[username]["last_password_update"] = str(datetime.now(egypt_tz))
-        save_users(users)
-        st.session_state.first_login = False
-        st.session_state.password_expired = False
-        st.success("Password updated successfully!")
-    else:
-        st.error("Passwords do not match!")
-
-
-        
-# دالة لتحديث الكمية
 def update_quantity(row_index, quantity, operation, username):
+    conn = sqlite3.connect('my_database.db')
+    c = conn.cursor()
+    
+    item_name = st.session_state.df.loc[row_index, 'Item Name']
     old_quantity = st.session_state.df.loc[row_index, 'Actual Quantity']
+    
     if operation == 'add':
-        st.session_state.df.loc[row_index, 'Actual Quantity'] += quantity
+        new_quantity = old_quantity + quantity
     elif operation == 'subtract':
-        st.session_state.df.loc[row_index, 'Actual Quantity'] -= quantity
-    new_quantity = st.session_state.df.loc[row_index, 'Actual Quantity']
-    st.session_state.df.to_csv('matril.csv', index=False)
-    st.success(f"Quantity updated successfully by {username}! New Quantity: {int(st.session_state.df.loc[row_index, 'Actual Quantity'])}")
+        new_quantity = old_quantity - quantity
+    
+    # تحديث الكمية في قاعدة البيانات
+    c.execute('''
+    UPDATE materials
+    SET actual_quantity = ?
+    WHERE item_name = ?
+    ''', (new_quantity, item_name))
+    
+    conn.commit()
+    conn.close()
+    
+    st.session_state.df.loc[row_index, 'Actual Quantity'] = new_quantity
+    
+    st.success(f"Quantity updated successfully by {username}! New Quantity: {new_quantity}")
     log_entry = {
         'user': username,
         'time': datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
-        'item': st.session_state.df.loc[row_index, 'Item Name'],
+        'item': item_name,
         'old_quantity': old_quantity,
         'new_quantity': new_quantity,
         'operation': operation
     }
     st.session_state.logs.append(log_entry)
     
-    # حفظ السجلات إلى ملف CSV
-    logs_df = pd.DataFrame(st.session_state.logs)
-    logs_df.to_csv('logs.csv', index=False)
+    # حفظ السجلات إلى قاعدة البيانات
+    save_logs(st.session_state.logs)
     
     # تحقق من الكميات وتحديث التنبيهات
     check_quantities()
-
 
 def check_quantities():
     new_alerts = []
@@ -120,16 +157,13 @@ def check_quantities():
     st.session_state.alerts = new_alerts
     save_alerts(st.session_state.alerts)
 
-# دالة للتحقق من الكميات لكل تبويب وعرض التنبيهات
+# تابع للتحقق من الكميات لكل تبويب وعرض التنبيهات
 def check_tab_quantities(tab_name, min_quantity):
-    
     df_tab = st.session_state.df[st.session_state.df['Item Name'] == tab_name]
     tab_alerts = df_tab[df_tab['Actual Quantity'] < min_quantity]['Item Name'].tolist()
-   
-    
     return tab_alerts, df_tab
 
-# عرض التبويبات
+# تابع عرض التبويبات
 def display_tab(tab_name, min_quantity):
     st.header(f'{tab_name}')
     row_number = st.number_input(f'Select row number for {tab_name}:', min_value=0, max_value=len(st.session_state.df)-1, step=1, key=f'{tab_name}_row_number')
@@ -149,8 +183,6 @@ def display_tab(tab_name, min_quantity):
     if tab_alerts:
         st.error(f"Low stock for items in {tab_name}:")
         st.dataframe(df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity']))
-        
-users = load_users()
 
 # واجهة تسجيل الدخول
 if 'logged_in' not in st.session_state:
@@ -158,8 +190,8 @@ if 'logged_in' not in st.session_state:
     st.session_state.logs = []
 
 if 'logs' not in st.session_state:
-    st.session_state.logs = load_logs()[0]
-    
+    st.session_state.logs = []
+
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
@@ -182,17 +214,7 @@ else:
     else:
         st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'>Logged in by: {users[st.session_state.username]['name']}</div>", unsafe_allow_html=True)
         
-        # قراءة البيانات
-           
-        if 'df' not in st.session_state:
-            st.session_state.df = pd.read_csv('matril.csv')
-        try:
-            logs_df = pd.read_csv('logs.csv')
-            st.session_state.logs = logs_df.to_dict('records')
-        except FileNotFoundError:
-            st.session_state.logs = []
-                
-        page = st. sidebar.radio('Select page', ['STG-2024', 'View Logs'])
+        page = st.sidebar.radio('Select page', ['STG-2024', 'View Logs'])
         
         if page == 'STG-2024':
             def main():
@@ -247,50 +269,20 @@ else:
                 ])
                 
                 with tab1:
-                    Small = df_Material[df_Material['Item Name'] == 'Reel Label (Small)'].sort_values(by='Item Name')
-                    st.dataframe(Small,width=2000)
-                    col4, col5, col6 = st.columns([2,1,2])
-                    with col4:
-                        display_tab('Reel Label (Small)', 100)
+                    display_tab('Reel Label (Small)', 100)
                    
                 with tab2:
-                    Large = df_Material[df_Material['Item Name'] == 'Reel Label (Large)'].sort_values(by='Item Name')
-                    st.dataframe(Large,width=2000)
-                    col4, col5, col6 = st.columns([2,1,2])
-                    with col4:
-                        display_tab('Reel Label (Large)', 200)
+                    display_tab('Reel Label (Large)', 200)
                 with tab3:
-                    Ink = df_Material[df_Material['Item Name'] == 'Ink Reels for Label'].sort_values(by='Item Name')
-                    st.dataframe(Ink,width=2000)
-                    col4, col5, col6 = st.columns([2,1,2])
-                    with col4:
-                        display_tab('Ink Reels for Label', 150)
+                    display_tab('Ink Reels for Label', 150)
                 with tab4:
-                    Tape = df_Material[df_Material['Item Name'] == 'Red Tape'].sort_values(by='Item Name')
-                    st.dataframe(Tape,width=2000)
-                    col4, col5, col6 = st.columns([2,1,2])
-                    with col4:
-                        display_tab('Red Tape', 50)
+                    display_tab('Red Tape', 50)
                 with tab5:
-                    Adhasive = df_Material[df_Material['Item Name'] == 'Adhasive Tape'].sort_values(by='Item Name')
-                    st.dataframe(Adhasive,width=2000)
-                    col4, col5, col6 = st.columns([2,2,2])
-                    with col4:
-                        display_tab('Adhasive Tape', 75)
+                    display_tab('Adhasive Tape', 75)
                 with tab6:
-                    Cartridges = df_Material[df_Material['Item Name'] == 'Cartridges'].sort_values(by='Item Name')
-                    st.dataframe(Cartridges,width=2000)
-                    col4, col5, col6 = st.columns([2,1,2])
-                    with col4:
-                        display_tab('Cartridges', 80)
+                    display_tab('Cartridges', 80)
                 with tab7:
-                    MultiPharma = df_Material[df_Material['Item Name'] == 'MultiPharma Cartridge'].sort_values(by='Item Name')
-                    st.dataframe(MultiPharma,width=2000)
-                    col4, col5, col6 = st.columns([2,1,2])
-                    with col4:
-                        display_tab('MultiPharma Cartridge', 120)
-        
-                
+                    display_tab('MultiPharma Cartridge', 120)
         
             if __name__ == '__main__':
                 main()
@@ -304,4 +296,3 @@ else:
                 st.download_button(label="Download Logs as sheet", data=csv, file_name='user_logs.csv', mime='text/csv')
             else:
                 st.write("No logs available.")
-      
