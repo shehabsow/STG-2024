@@ -11,11 +11,9 @@ def create_database():
 
     # إنشاء جدول للمواد
     c.execute('''
-    CREATE TABLE IF NOT EXISTS materials ( 
-        Item Name,
-        Actual Quantity	Monthly,
-        Consumption,
-        Coverage (in Month)
+    CREATE TABLE IF NOT EXISTS materials (
+        item_name TEXT,
+        actual_quantity INTEGER
     )
     ''')
 
