@@ -11,9 +11,11 @@ def create_database():
 
     # إنشاء جدول للمواد
     c.execute('''
-    CREATE TABLE IF NOT EXISTS materials (
-        item_name TEXT,
-        actual_quantity INTEGER
+    CREATE TABLE IF NOT EXISTS materials ( 
+        Item Name,
+        Actual Quantity	Monthly,
+        Consumption,
+        Coverage (in Month)
     )
     ''')
 
@@ -69,8 +71,7 @@ def load_data_from_database(table_name):
     return df
 
 df_Material = load_data_from_database('materials')
-df_logs_location = load_data_from_database('logs_location')
-df_logs_receving = load_data_from_database('logs_receving')
+
 
 # تابع تحميل المستخدمين من قاعدة البيانات
 def load_users():
