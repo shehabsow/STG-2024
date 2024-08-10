@@ -28,7 +28,8 @@ def load_users():
         return {
             "knhp322": {"password": "knhp322", "first_login": True, "name": "Shehab Ayman", "last_password_update": str(datetime.now(egypt_tz))},
             "KFXW551": {"password": "KFXW551", "first_login": True, "name": " Hossameldin Mostafa", "last_password_update": str(datetime.now(egypt_tz))},
-            "knvp968": {"password": "knvp968", "first_login": True, "name": "  Mohamed Nader", "last_password_update": str(datetime.now(egypt_tz))}}
+            "knvp968": {"password": "knvp968", "first_login": True, "name": "  Mohamed Nader", "last_password_update": str(datetime.now(egypt_tz))},
+            "kcqw615": {"password": "kcqw615", "first_login": True, "name": "Tareek", "last_password_update": str(datetime.now(egypt_tz))}}
 
 # Save users data to JSON file
 def save_users(users):
