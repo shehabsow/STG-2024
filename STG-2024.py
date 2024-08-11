@@ -7,8 +7,8 @@ import sqlite3
 
 egypt_tz = pytz.timezone('Africa/Cairo')
 df_Material = pd.read_csv('matril.csv')
-df_BIN = pd.read_csv('LOCATION (1).csv')
-df_Receving = pd.read_csv('Receving.csv')
+#df_BIN = pd.read_csv('LOCATION (1).csv')
+#df_Receving = pd.read_csv('Receving.csv')
 
 def load_users():
     try:
