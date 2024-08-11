@@ -335,10 +335,17 @@ else:
         
         elif page == 'View Logs':
             st.header('User Activity Logs')
-            if st.session_state.logs:
-                logs_df = pd.DataFrame(st.session_state.logs)
-                st.dataframe(logs_df, width=1000, height=400)
-                csv = logs_df.to_csv(index=False)
-                st.download_button(label="Download Logs as sheet", data=csv, file_name='user_logs.csv', mime='text/csv')
+            def load_logs():
+                conn = sqlite3.connect('my_database.db')
+                df = pd.read_sql_query('SELECT * FROM logs', conn)
+                conn.close()
+                return df
+            
+            # تأكد من وجود السجلات في session_state
+            if 'logs' not in st.session_state:
+                st.session_state.logs = load_logs()
+            
+            if st.session_state.logs is not None:
+                st.dataframe(st.session_state.logs)
             else:
-                st.write("No logs available.")
+                st.warning("No logs available")
