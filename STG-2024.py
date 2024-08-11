@@ -195,11 +195,17 @@ def check_quantities():
 
 # تابع للتحقق من الكميات لكل تبويب وعرض التنبيهات
 def check_tab_quantities(tab_name, min_quantity):
+    tab_alerts = []
     if 'df' in st.session_state:
         df = st.session_state.df
-        df_tab = st.session_state.df[st.session_state.df['Item Name'] == tab_name]
-        tab_alerts = df_tab[df_tab['Actual Quantity'] < min_quantity]['Item Name'].tolist()
+        df_tab = df[df['item_name'] == tab_name]
+        for index, row in df_tab.iterrows():
+            if row['actual_quantity'] < min_quantity:
+                tab_alerts.append(f"Alert: {row['item_name']} is below the minimum quantity")
         return tab_alerts, df_tab
+    else:
+        st.error("Data not loaded")
+        return [], pd.DataFrame()
 
 # تابع عرض التبويبات
 def display_tab(tab_name, min_quantity):
