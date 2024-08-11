@@ -39,11 +39,18 @@ def create_database():
         last_password_update TEXT
     )
     ''')
-
+    c.execute('SELECT COUNT(*) FROM users')
+    if c.fetchone()[0] == 0:
+        c.execute('''
+        INSERT INTO users (username, password, first_login, name, last_password_update)
+        VALUES ('admin', 'admin', 1, 'Admin', ?)
+        ''', (datetime.now(pytz.timezone('Africa/Cairo')).strftime('%Y-%m-%d %H:%M:%S.%f%z'),))
+    
     conn.commit()
     conn.close()
 
 create_database()
+
 
 
 def load_csv_to_database(csv_file, table_name):
@@ -70,8 +77,6 @@ def load_data_from_database(table_name):
 
 df_Material = load_data_from_database('materials')
 
-
-# تابع تحميل المستخدمين من قاعدة البيانات
 def load_users():
     conn = sqlite3.connect('my_database.db')
     df = pd.read_sql_query('SELECT * FROM users', conn)
@@ -83,6 +88,38 @@ def load_users():
         'name': user['name'],
         'last_password_update': user['last_password_update']
     } for username, user in users.items()}
+
+# دالة لتسجيل الدخول
+def login(username, password):
+    users = load_users()
+    if username in users and users[username]['password'] == password:
+        st.session_state.logged_in = True
+        st.session_state.username = username
+        st.session_state.first_login = users[username]['first_login']
+        last_password_update = datetime.strptime(users[username]['last_password_update'], '%Y-%m-%d %H:%M:%S.%f%z')
+        if datetime.now(egypt_tz) - last_password_update > timedelta(days=30):
+            st.session_state.password_expired = True
+        else:
+            st.session_state.password_expired = False
+    else:
+        st.error("Incorrect username or password")
+
+# دالة لتحديث كلمة المرور
+def update_password(username, new_password, confirm_new_password):
+    if new_password == confirm_new_password:
+        conn = sqlite3.connect('my_database.db')
+        c = conn.cursor()
+        c.execute('''
+        UPDATE users
+        SET password = ?, last_password_update = ?
+        WHERE username = ?
+        ''', (new_password, datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S.%f%z'), username))
+        conn.commit()
+        conn.close()
+        st.success("Password updated successfully")
+    else:
+        st.error("Passwords do not match")
+
 
 def save_users(users):
     conn = sqlite3.connect('my_database.db')
@@ -183,48 +220,7 @@ def display_tab(tab_name, min_quantity):
         st.error(f"Low stock for items in {tab_name}:")
         st.dataframe(df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity']))
 
-def load_users():
-    conn = sqlite3.connect('my_database.db')
-    df = pd.read_sql_query('SELECT * FROM users', conn)
-    conn.close()
-    users = df.set_index('username').to_dict(orient='index')
-    return {username: {
-        'password': user['password'],
-        'first_login': user['first_login'],
-        'name': user['name'],
-        'last_password_update': user['last_password_update']
-    } for username, user in users.items()}
 
-# دالة لتسجيل الدخول
-def login(username, password):
-    users = load_users()
-    if username in users and users[username]['password'] == password:
-        st.session_state.logged_in = True
-        st.session_state.username = username
-        st.session_state.first_login = users[username]['first_login']
-        last_password_update = datetime.strptime(users[username]['last_password_update'], '%Y-%m-%d %H:%M:%S.%f%z')
-        if datetime.now(egypt_tz) - last_password_update > timedelta(days=30):
-            st.session_state.password_expired = True
-        else:
-            st.session_state.password_expired = False
-    else:
-        st.error("Incorrect username or password")
-
-# دالة لتحديث كلمة المرور
-def update_password(username, new_password, confirm_new_password):
-    if new_password == confirm_new_password:
-        conn = sqlite3.connect('my_database.db')
-        c = conn.cursor()
-        c.execute('''
-        UPDATE users
-        SET password = ?, last_password_update = ?
-        WHERE username = ?
-        ''', (new_password, datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S.%f%z'), username))
-        conn.commit()
-        conn.close()
-        st.success("Password updated successfully")
-    else:
-        st.error("Passwords do not match")
 
 # واجهة تسجيل الدخول
 if 'logged_in' not in st.session_state:
