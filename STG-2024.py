@@ -58,6 +58,7 @@ def init_db():
 
 # تحميل بيانات المستخدمين
 def load_users():
+    c.execute('SELECT COUNT(*) FROM users')
     if c.fetchone()[0] == 0:
         c.execute('''
         INSERT INTO users (username, password, first_login, name, last_password_update)
