@@ -10,8 +10,11 @@ def create_database():
     c = conn.cursor()
     c.execute('''
     CREATE TABLE IF NOT EXISTS materials (
-        item_name TEXT,
-        actual_quantity INTEGER
+        Item Name TEXT,
+        Actual Quantity,
+        Monthly Consumption,
+        Coverage (in Month)
+        
     )
     ''')
     c.execute('''
