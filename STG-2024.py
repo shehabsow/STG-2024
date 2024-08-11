@@ -58,12 +58,11 @@ def init_db():
 
 # تحميل بيانات المستخدمين
 def load_users():
-    conn = sqlite3.connect('stg2024.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM users')
-    users = {row[0]: {'password': row[1], 'first_login': row[2], 'name': row[3], 'last_password_update': row[4]} for row in c.fetchall()}
-    conn.close()
-    return users
+    if c.fetchone()[0] == 0:
+        c.execute('''
+        INSERT INTO users (username, password, first_login, name, last_password_update)
+        VALUES ('admin', 'admin', 1, 'Admin', ?)
+        ''', (datetime.now(pytz.timezone('Africa/Cairo')).strftime('%Y-%m-%d %H:%M:%S.%f%z'),))
 
 # حفظ بيانات المستخدمين
 def save_users(users):
