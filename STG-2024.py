@@ -4,31 +4,39 @@ import pytz
 from datetime import datetime, timedelta
 import sqlite3
 import json
+import os
 
-# إعداد قاعدة البيانات
-def create_database():
-    conn = sqlite3.connect('app_database.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('''
+# إعدادات Streamlit
+st.set_page_config(
+    layout="wide",
+    page_title='STG-2024',
+    page_icon='🪙')
+
+egypt_tz = pytz.timezone('Africa/Cairo')
+
+# إعداد قاعدة البيانات SQLite
+def init_db():
+    conn = sqlite3.connect('stg2024.db')
+    c = conn.cursor()
+
+    # إنشاء جداول المستخدمين والمواد وسجلات النشاط والتنبيهات
+    c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             username TEXT PRIMARY KEY,
             password TEXT NOT NULL,
-            first_login BOOLEAN NOT NULL,
+            first_login BOOLEAN,
             name TEXT NOT NULL,
             last_password_update TEXT NOT NULL
         )
     ''')
-    
-    cursor.execute('''
+    c.execute('''
         CREATE TABLE IF NOT EXISTS material (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             item_name TEXT NOT NULL,
             actual_quantity INTEGER NOT NULL
         )
     ''')
-    
-    cursor.execute('''
+    c.execute('''
         CREATE TABLE IF NOT EXISTS logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user TEXT NOT NULL,
@@ -39,161 +47,149 @@ def create_database():
             operation TEXT NOT NULL
         )
     ''')
-    
-    cursor.execute('''
+    c.execute('''
         CREATE TABLE IF NOT EXISTS alerts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             item_name TEXT NOT NULL
         )
     ''')
-    
     conn.commit()
     conn.close()
 
-create_database()
-
-# تحميل بيانات المستخدمين من قاعدة البيانات
+# تحميل بيانات المستخدمين
 def load_users():
-    conn = sqlite3.connect('app_database.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users')
-    users = {row[0]: {"password": row[1], "first_login": row[2], "name": row[3], "last_password_update": row[4]} for row in cursor.fetchall()}
+    conn = sqlite3.connect('stg2024.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM users')
+    users = {row[0]: {'password': row[1], 'first_login': row[2], 'name': row[3], 'last_password_update': row[4]} for row in c.fetchall()}
     conn.close()
     return users
 
-# حفظ بيانات المستخدمين إلى قاعدة البيانات
+# حفظ بيانات المستخدمين
 def save_users(users):
-    conn = sqlite3.connect('app_database.db')
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM users')
-    for username, user_info in users.items():
-        cursor.execute('INSERT INTO users (username, password, first_login, name, last_password_update) VALUES (?, ?, ?, ?, ?)',
-                       (username, user_info["password"], user_info["first_login"], user_info["name"], user_info["last_password_update"]))
+    conn = sqlite3.connect('stg2024.db')
+    c = conn.cursor()
+    for username, user_data in users.items():
+        c.execute('''
+            INSERT OR REPLACE INTO users (username, password, first_login, name, last_password_update)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (username, user_data['password'], user_data['first_login'], user_data['name'], user_data['last_password_update']))
     conn.commit()
     conn.close()
 
-# تحميل المواد من قاعدة البيانات
+# تحميل بيانات المواد
 def load_material():
-    conn = sqlite3.connect('app_database.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM material')
-    data = cursor.fetchall()
-    df = pd.DataFrame(data, columns=['id', 'item_name', 'actual_quantity'])
+    conn = sqlite3.connect('stg2024.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM material')
+    df = pd.DataFrame(c.fetchall(), columns=['id', 'item_name', 'actual_quantity'])
     conn.close()
     return df
 
-# حفظ المواد إلى قاعدة البيانات
+# حفظ بيانات المواد
 def save_material(df):
-    conn = sqlite3.connect('app_database.db')
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM material')
+    conn = sqlite3.connect('stg2024.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM material')
     for _, row in df.iterrows():
-        cursor.execute('INSERT INTO material (item_name, actual_quantity) VALUES (?, ?)', (row['item_name'], row['actual_quantity']))
+        c.execute('''
+            INSERT INTO material (item_name, actual_quantity)
+            VALUES (?, ?)
+        ''', (row['item_name'], row['actual_quantity']))
     conn.commit()
     conn.close()
 
-# تحميل السجلات من قاعدة البيانات
-def load_logs():
-    conn = sqlite3.connect('app_database.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM logs')
-    logs = cursor.fetchall()
-    conn.close()
-    return logs
-
-# حفظ السجلات إلى قاعدة البيانات
+# حفظ السجلات
 def save_logs(logs):
-    conn = sqlite3.connect('app_database.db')
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM logs')
-    cursor.executemany('INSERT INTO logs (user, time, item, old_quantity, new_quantity, operation) VALUES (?, ?, ?, ?, ?, ?)', logs)
+    conn = sqlite3.connect('stg2024.db')
+    c = conn.cursor()
+    for log in logs:
+        c.execute('''
+            INSERT INTO logs (user, time, item, old_quantity, new_quantity, operation)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (log['user'], log['time'], log['item'], log['old_quantity'], log['new_quantity'], log['operation']))
     conn.commit()
     conn.close()
 
-# تحميل التنبيهات من قاعدة البيانات
-def load_alerts():
-    conn = sqlite3.connect('app_database.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT item_name FROM alerts')
-    alerts = [row[0] for row in cursor.fetchall()]
-    conn.close()
-    return alerts
-
-# حفظ التنبيهات إلى قاعدة البيانات
+# حفظ التنبيهات
 def save_alerts(alerts):
-    conn = sqlite3.connect('app_database.db')
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM alerts')
-    cursor.executemany('INSERT INTO alerts (item_name) VALUES (?)', [(alert,) for alert in alerts])
+    conn = sqlite3.connect('stg2024.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM alerts')
+    for alert in alerts:
+        c.execute('''
+            INSERT INTO alerts (item_name)
+            VALUES (?)
+        ''', (alert,))
     conn.commit()
     conn.close()
 
-# تسجيل الدخول
+# دالة تسجيل الدخول
 def login(username, password):
     users = load_users()
     if username in users and users[username]['password'] == password:
         st.session_state.logged_in = True
         st.session_state.username = username
         st.session_state.first_login = users[username]['first_login']
-        if st.session_state.first_login:
-            st.session_state.refreshed = False
+        last_password_update = datetime.strptime(users[username]['last_password_update'], '%Y-%m-%d %H:%M:%S.%f%z')
+        if datetime.now(egypt_tz) - last_password_update > timedelta(days=30):
+            st.session_state.password_expired = True
+        else:
+            st.session_state.password_expired = False
     else:
-        st.error("Invalid username or password.")
+        st.error("Incorrect username or password")
 
-# تحديث كلمة المرور
+# دالة تحديث كلمة المرور
 def update_password(username, new_password, confirm_new_password):
-    if new_password != confirm_new_password:
-        st.error("Passwords do not match.")
-        return
-    
-    conn = sqlite3.connect('app_database.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('UPDATE users SET password = ?, first_login = ? WHERE username = ?', (new_password, False, username))
-    conn.commit()
-    conn.close()
-    
-    st.success("Password updated successfully!")
-    st.session_state.first_login = False
+    if new_password == confirm_new_password:
+        users = load_users()
+        users[username]['password'] = new_password
+        users[username]['first_login'] = False
+        users[username]['last_password_update'] = str(datetime.now(egypt_tz))
+        save_users(users)
+        st.session_state.first_login = False
+        st.session_state.password_expired = False
+        st.success("Password updated successfully!")
+    else:
+        st.error("Passwords do not match!")
 
-# تحديث الكمية
+# دالة تحديث الكمية
 def update_quantity(row_index, quantity, operation, username):
-    conn = sqlite3.connect('app_database.db')
-    cursor = conn.cursor()
+    df = st.session_state.df
+    old_quantity = df.loc[row_index, 'actual_quantity']
+    if operation == 'add':
+        df.loc[row_index, 'actual_quantity'] += quantity
+    elif operation == 'subtract':
+        df.loc[row_index, 'actual_quantity'] -= quantity
+    new_quantity = df.loc[row_index, 'actual_quantity']
+    save_material(df)
+    st.success(f"Quantity updated successfully by {username}! New Quantity: {int(new_quantity)}")
     
-    cursor.execute('SELECT * FROM material WHERE id = ?', (row_index,))
-    row = cursor.fetchone()
-    old_quantity = row[2]
+    log_entry = {
+        'user': username,
+        'time': datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
+        'item': df.loc[row_index, 'item_name'],
+        'old_quantity': old_quantity,
+        'new_quantity': new_quantity,
+        'operation': operation
+    }
+    st.session_state.logs.append(log_entry)
     
-    new_quantity = old_quantity + quantity if operation == 'add' else old_quantity - quantity
-    
-    cursor.execute('UPDATE material SET actual_quantity = ? WHERE id = ?', (new_quantity, row_index))
-    conn.commit()
-    
-    log_entry = (username, datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'), row[1], old_quantity, new_quantity, operation)
-    cursor.execute('INSERT INTO logs (user, time, item, old_quantity, new_quantity, operation) VALUES (?, ?, ?, ?, ?, ?)', log_entry)
-    
-    conn.commit()
-    conn.close()
-    
-    st.success(f"Quantity updated successfully by {username}! New Quantity: {new_quantity}")
+    save_logs(st.session_state.logs)
     
     check_quantities()
 
-# التحقق من الكميات
 def check_quantities():
-    df = load_material()
-    new_alerts = [row['item_name'] for _, row in df.iterrows() if row['actual_quantity'] < 100]
-    
+    df = st.session_state.df
+    new_alerts = df[df['actual_quantity'] < 100]['item_name'].tolist()
+    st.session_state.alerts = new_alerts
     save_alerts(new_alerts)
 
-# التحقق من الكميات لكل تبويب
 def check_tab_quantities(tab_name, min_quantity):
     df_tab = st.session_state.df[st.session_state.df['item_name'] == tab_name]
     tab_alerts = df_tab[df_tab['actual_quantity'] < min_quantity]['item_name'].tolist()
     return tab_alerts, df_tab
 
-# عرض التبويبات
 def display_tab(tab_name, min_quantity):
     st.header(f'{tab_name}')
     row_number = st.number_input(f'Select row number for {tab_name}:', min_value=0, max_value=len(st.session_state.df)-1, step=1, key=f'{tab_name}_row_number')
@@ -214,13 +210,13 @@ def display_tab(tab_name, min_quantity):
         st.error(f"Low stock for items in {tab_name}:")
         st.dataframe(df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['actual_quantity']))
 
-# واجهة تسجيل الدخول
+# التحقق من تسجيل الدخول
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.logs = []
 
 if 'logs' not in st.session_state:
-    st.session_state.logs = load_logs()
+    st.session_state.logs = []
 
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 1, 1])
@@ -242,10 +238,30 @@ else:
                 else:
                     update_password(st.session_state.username, new_password, confirm_new_password)
     else:
-        st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'>Logged in by: {load_users()[st.session_state.username]['name']}</div>", unsafe_allow_html=True)
+        # التحقق من وجود username في session_state
+        if 'username' in st.session_state:
+            users = load_users()
+            username = st.session_state.username
+            if username in users:
+                user_name = users[username]['name']
+                st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'>Logged in by: {user_name}</div>", unsafe_allow_html=True)
+            else:
+                st.error("User information not found.")
+        else:
+            st.error("Username not found in session state.")
         
+        # قراءة البيانات
         if 'df' not in st.session_state:
             st.session_state.df = load_material()
+
+        try:
+            conn = sqlite3.connect('stg2024.db')
+            c = conn.cursor()
+            c.execute('SELECT * FROM logs')
+            st.session_state.logs = [dict(zip([column[0] for column in c.description], row)) for row in c.fetchall()]
+            conn.close()
+        except FileNotFoundError:
+            st.session_state.logs = []
                 
         page = st.sidebar.radio('Select page', ['STG-2024', 'View Logs'])
         
@@ -294,20 +310,29 @@ else:
                     search_results = search_in_dataframe(st.session_state.df, search_keyword, search_option)
                     st.write(f"Search results for '{search_keyword}' in {search_option}:")
                     st.dataframe(search_results, width=1000, height=200)
-                st.session_state.refreshed = True
+                st.session_state.refreshed = True 
                 
-                tabs = ['Reel Label (Small)', 'Reel Label (Large)', 'Ink Reels for Label', 'Red Tape', 'Adhasive Tape', 'Cartridges', 'MultiPharma Cartridge']
-                for tab in tabs:
-                    with st.expander(tab):
-                        df_tab = st.session_state.df[st.session_state.df['item_name'] == tab].sort_values(by='item_name')
+                tabs = [
+                    'Reel Label (Small)', 'Reel Label (Large)',
+                    'Ink Reels for Label', 'Red Tape', 'Adhasive Tape', 'Cartridges', 'MultiPharma Cartridge'
+                ]
+                for tab_name in tabs:
+                    with st.tab(tab_name):
+                        df_tab = st.session_state.df[st.session_state.df['item_name'] == tab_name].sort_values(by='item_name')
                         st.dataframe(df_tab, width=2000)
-                        display_tab(tab, 100)  # Use the appropriate min_quantity for each tab
-        
+                        col4, col5, col6 = st.columns([2, 1, 2])
+                        with col4:
+                            display_tab(tab_name, 100)  # قيمة `100` يمكن تعديلها حسب الحاجة
+                
             if __name__ == '__main__':
                 main()
         
         elif page == 'View Logs':
-            logs_df = pd.DataFrame(st.session_state.logs, columns=['ID', 'User', 'Time', 'Item', 'Old Quantity', 'New Quantity', 'Operation'])
-            st.dataframe(logs_df, width=1000, height=500)
-            csv = logs_df.to_csv(index=False)
-            st.download_button(label="Download Logs as CSV", data=csv, file_name='user_logs.csv', mime='text/csv')
+            st.header('User Activity Logs')
+            if st.session_state.logs:
+                logs_df = pd.DataFrame(st.session_state.logs)
+                st.dataframe(logs_df, width=1000, height=400)
+                csv = logs_df.to_csv(index=False)
+                st.download_button(label="Download Logs as sheet", data=csv, file_name='user_logs.csv', mime='text/csv')
+            else:
+                st.write("No logs available.")
