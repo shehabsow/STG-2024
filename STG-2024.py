@@ -202,18 +202,20 @@ def check_tab_quantities(tab_name, min_quantity):
 # تابع عرض التبويبات
 def display_tab(tab_name, min_quantity):
     st.header(f'{tab_name}')
-    row_number = st.number_input(f'Select row number for {tab_name}:', min_value=0, max_value=len(st.session_state.df)-1, step=1, key=f'{tab_name}_row_number')
+    if 'df' in st.session_state:
+        df = st.session_state.df
+        row_number = st.number_input(f'Select row number for {tab_name}:', min_value=0, max_value=len(st.session_state.df)-1, step=1, key=f'{tab_name}_row_number')
+        
+        st.markdown(f"""
+        <div style='font-size: 20px; color: blue;'>Selected Item: {st.session_state.df.loc[row_number, 'Item Name']}</div>
+        <div style='font-size: 20px; color: blue;'>Current Quantity: {int(st.session_state.df.loc[row_number, 'Actual Quantity'])}</div>
+        """, unsafe_allow_html=True)
+        
+        quantity = st.number_input(f'Enter quantity for {tab_name}:', min_value=1, step=1, key=f'{tab_name}_quantity')
+        operation = st.radio(f'Choose operation for {tab_name}:', ('add', 'subtract'), key=f'{tab_name}_operation')
     
-    st.markdown(f"""
-    <div style='font-size: 20px; color: blue;'>Selected Item: {st.session_state.df.loc[row_number, 'Item Name']}</div>
-    <div style='font-size: 20px; color: blue;'>Current Quantity: {int(st.session_state.df.loc[row_number, 'Actual Quantity'])}</div>
-    """, unsafe_allow_html=True)
-    
-    quantity = st.number_input(f'Enter quantity for {tab_name}:', min_value=1, step=1, key=f'{tab_name}_quantity')
-    operation = st.radio(f'Choose operation for {tab_name}:', ('add', 'subtract'), key=f'{tab_name}_operation')
-
-    if st.button('Update Quantity', key=f'{tab_name}_update_button'):
-        update_quantity(row_number, quantity, operation, st.session_state.username)
+        if st.button('Update Quantity', key=f'{tab_name}_update_button'):
+            update_quantity(row_number, quantity, operation, st.session_state.username)
     
     tab_alerts, df_tab = check_tab_quantities(tab_name, min_quantity)
     if tab_alerts:
