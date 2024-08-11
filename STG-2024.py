@@ -8,16 +8,12 @@ import sqlite3
 def create_database():
     conn = sqlite3.connect('my_database.db')
     c = conn.cursor()
-
-    # إنشاء جدول للمواد
     c.execute('''
     CREATE TABLE IF NOT EXISTS materials (
         item_name TEXT,
         actual_quantity INTEGER
     )
     ''')
-
-    # إنشاء جدول للسجلات
     c.execute('''
     CREATE TABLE IF NOT EXISTS logs (
         user TEXT,
@@ -28,8 +24,6 @@ def create_database():
         operation TEXT
     )
     ''')
-
-    # إنشاء جدول للمستخدمين
     c.execute('''
     CREATE TABLE IF NOT EXISTS users (
         username TEXT PRIMARY KEY,
@@ -39,6 +33,8 @@ def create_database():
         last_password_update TEXT
     )
     ''')
+
+    # إضافة مستخدم افتراضي إذا لم يكن هناك مستخدمون
     c.execute('SELECT COUNT(*) FROM users')
     if c.fetchone()[0] == 0:
         c.execute('''
@@ -59,16 +55,17 @@ def load_csv_to_database(csv_file, table_name):
     df.to_sql(table_name, conn, if_exists='replace', index=False)
     conn.close()
 
-# تحميل ملفات CSV إلى قاعدة البيانات
 load_csv_to_database('matril.csv', 'materials')
 
 st.set_page_config(
     layout="wide",
     page_title='STG-2024',
-    page_icon='🪙')
+    page_icon='🪙'
+)
 
 egypt_tz = pytz.timezone('Africa/Cairo')
 
+# تحميل البيانات من قاعدة البيانات
 def load_data_from_database(table_name):
     conn = sqlite3.connect('my_database.db')
     df = pd.read_sql_query(f'SELECT * FROM {table_name}', conn)
@@ -76,6 +73,7 @@ def load_data_from_database(table_name):
     return df
 
 df_Material = load_data_from_database('materials')
+
 
 def load_users():
     conn = sqlite3.connect('my_database.db')
@@ -111,12 +109,14 @@ def update_password(username, new_password, confirm_new_password):
         c = conn.cursor()
         c.execute('''
         UPDATE users
-        SET password = ?, last_password_update = ?
+        SET password = ?, first_login = 0, last_password_update = ?
         WHERE username = ?
         ''', (new_password, datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S.%f%z'), username))
         conn.commit()
         conn.close()
+        st.session_state.first_login = False  # تحديث حالة first_login في الجلسة
         st.success("Password updated successfully")
+        st.experimental_rerun()  # إعادة تحميل الصفحة
     else:
         st.error("Passwords do not match")
 
