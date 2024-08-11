@@ -183,13 +183,52 @@ def display_tab(tab_name, min_quantity):
         st.error(f"Low stock for items in {tab_name}:")
         st.dataframe(df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity']))
 
+def load_users():
+    conn = sqlite3.connect('my_database.db')
+    df = pd.read_sql_query('SELECT * FROM users', conn)
+    conn.close()
+    users = df.set_index('username').to_dict(orient='index')
+    return {username: {
+        'password': user['password'],
+        'first_login': user['first_login'],
+        'name': user['name'],
+        'last_password_update': user['last_password_update']
+    } for username, user in users.items()}
+
+# دالة لتسجيل الدخول
+def login(username, password):
+    users = load_users()
+    if username in users and users[username]['password'] == password:
+        st.session_state.logged_in = True
+        st.session_state.username = username
+        st.session_state.first_login = users[username]['first_login']
+        last_password_update = datetime.strptime(users[username]['last_password_update'], '%Y-%m-%d %H:%M:%S.%f%z')
+        if datetime.now(egypt_tz) - last_password_update > timedelta(days=30):
+            st.session_state.password_expired = True
+        else:
+            st.session_state.password_expired = False
+    else:
+        st.error("Incorrect username or password")
+
+# دالة لتحديث كلمة المرور
+def update_password(username, new_password, confirm_new_password):
+    if new_password == confirm_new_password:
+        conn = sqlite3.connect('my_database.db')
+        c = conn.cursor()
+        c.execute('''
+        UPDATE users
+        SET password = ?, last_password_update = ?
+        WHERE username = ?
+        ''', (new_password, datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S.%f%z'), username))
+        conn.commit()
+        conn.close()
+        st.success("Password updated successfully")
+    else:
+        st.error("Passwords do not match")
+
 # واجهة تسجيل الدخول
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
-    st.session_state.logs = []
-
-if 'logs' not in st.session_state:
-    st.session_state.logs = []
 
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 1, 1])
@@ -197,7 +236,7 @@ if not st.session_state.logged_in:
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
         if st.button("Login"):
-            load_users(username, password)
+            login(username, password)
 else:
     if st.session_state.first_login:
         col1, col2, col3 = st.columns([1, 1, 1])
@@ -211,7 +250,9 @@ else:
                 else:
                     update_password(st.session_state.username, new_password, confirm_new_password)
     else:
-        st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'>Logged in by: {users[st.session_state.username]['name']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'>Logged in by: {st.session_state.username}</div>", unsafe_allow_html=True)
+    #else:
+        #st.markdown(f"<div style='text-align: right; font-size: 20px; color: green;'>Logged in by: {users[st.session_state.username]['name']}</div>", unsafe_allow_html=True)
         
         page = st.sidebar.radio('Select page', ['STG-2024', 'View Logs'])
         
