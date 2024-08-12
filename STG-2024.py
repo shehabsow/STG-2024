@@ -4,8 +4,6 @@ import sqlite3
 from datetime import datetime
 
 # تحميل بيانات الإكسل إلى DataFrame
-excel_file = 'path/to/yourfile.xlsx'
-
 df = pd.read_csv('matril.csv')
 
 # إنشاء أو الاتصال بقاعدة البيانات
@@ -16,16 +14,25 @@ c = conn.cursor()
 c.execute('''
 CREATE TABLE IF NOT EXISTS inventory (
     item_name TEXT,
-    Actual_Quantity INTEGER,
+    actual_quantity INTEGER,
     monthly_consumption REAL,
     coverage_in_month REAL
 )
 ''')
 
-# تحميل البيانات من DataFrame إلى قاعدة البيانات
-df.to_sql('inventory', conn, if_exists='replace', index=False)
+# التحقق مما إذا كان الجدول يحتوي على البيانات
+c.execute("PRAGMA table_info(inventory)")
+columns = [info[1] for info in c.fetchall()]
 
-# إنشاء جدول المستخدمين
+if 'actual_quantity' not in columns or 'item_name' not in columns:
+    st.error("The 'inventory' table does not contain the expected columns.")
+else:
+    # تحميل البيانات من DataFrame إلى قاعدة البيانات إذا لم يكن الجدول موجودًا
+    c.execute("SELECT count(*) FROM inventory")
+    if c.fetchone()[0] == 0:
+        df.to_sql('inventory', conn, if_exists='replace', index=False)
+
+# إنشاء جدول المستخدمين إذا لم يكن موجوداً
 c.execute('''
 CREATE TABLE IF NOT EXISTS users (
     user_id INTEGER PRIMARY KEY,
@@ -34,7 +41,7 @@ CREATE TABLE IF NOT EXISTS users (
 )
 ''')
 
-# إنشاء جدول تسجيل التغييرات
+# إنشاء جدول تسجيل التغييرات إذا لم يكن موجوداً
 c.execute('''
 CREATE TABLE IF NOT EXISTS changes (
     change_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -111,8 +118,12 @@ if user_id:
     
     # عرض الكمية الحالية
     item_name = st.selectbox('Select Item', df['Item Name'].unique())
-  
-    st.write('Current quantity of {}: {}'.format(item_name, show_quantity(item_name)))
+    if item_name:
+        quantity = show_quantity(item_name)
+        if quantity is not None:
+            st.write('Current quantity of {}: {}'.format(item_name, quantity))
+        else:
+            st.write('Item not found in the database.')
 
     # تحديث الكمية
     change_type = st.selectbox('Change Type', ['add', 'subtract'])
@@ -125,3 +136,4 @@ if user_id:
         else:
             st.error('Failed to update quantity')
 
+conn.close()
