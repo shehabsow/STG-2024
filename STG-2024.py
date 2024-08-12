@@ -5,7 +5,8 @@ from datetime import datetime
 
 # تحميل بيانات الإكسل إلى DataFrame
 excel_file = 'path/to/yourfile.xlsx'
-df = pd.read_excel(excel_file)
+
+df= pd.read_csv('matril.csv')
 
 # إنشاء أو الاتصال بقاعدة البيانات
 conn = sqlite3.connect('inventory.db')
