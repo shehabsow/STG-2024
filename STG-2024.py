@@ -16,7 +16,7 @@ c = conn.cursor()
 c.execute('''
 CREATE TABLE IF NOT EXISTS inventory (
     item_name TEXT,
-    actual_quantity INTEGER,
+    Actual_Quantity INTEGER,
     monthly_consumption REAL,
     coverage_in_month REAL
 )
