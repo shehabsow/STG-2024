@@ -15,7 +15,7 @@ c = conn.cursor()
 # إنشاء جدول البيانات الأساسي إذا لم يكن موجوداً
 c.execute('''
 CREATE TABLE IF NOT EXISTS inventory (
-    Item Name TEXT,
+    item_name TEXT,
     actual_quantity INTEGER,
     monthly_consumption REAL,
     coverage_in_month REAL
@@ -51,21 +51,25 @@ conn.commit()
 
 # وظيفة لإظهار الكمية الموجودة
 def show_quantity(item_name):
-    c.execute('SELECT actual_quantity FROM inventory WHERE item_name=?', (item_name,))
-    result = c.fetchone()
-    return result[0] if result else None
+    with sqlite3.connect('inventory.db') as conn:
+        c = conn.cursor()
+        c.execute('SELECT actual_quantity FROM inventory WHERE item_name=?', (item_name,))
+        result = c.fetchone()
+        return result[0] if result else None
 
 # وظيفة لتحديث الكمية
 def update_quantity(user_id, item_name, change_type, change_quantity):
-    current_quantity = show_quantity(item_name)
-    if current_quantity is not None:
-        new_quantity = current_quantity + change_quantity if change_type == 'add' else current_quantity - change_quantity
-        c.execute('UPDATE inventory SET actual_quantity=? WHERE Item Name=?', (new_quantity, item_name))
-        c.execute('INSERT INTO changes (user_id, item_name, change_type, change_quantity) VALUES (?, ?, ?, ?)', (user_id, item_name, change_type, change_quantity))
-        conn.commit()
-        return new_quantity
-    else:
-        return None
+    with sqlite3.connect('inventory.db') as conn:
+        c = conn.cursor()
+        current_quantity = show_quantity(item_name)
+        if current_quantity is not None:
+            new_quantity = current_quantity + change_quantity if change_type == 'add' else current_quantity - change_quantity
+            c.execute('UPDATE inventory SET actual_quantity=? WHERE item_name=?', (new_quantity, item_name))
+            c.execute('INSERT INTO changes (user_id, item_name, change_type, change_quantity) VALUES (?, ?, ?, ?)', (user_id, item_name, change_type, change_quantity))
+            conn.commit()
+            return new_quantity
+        else:
+            return None
 
 # واجهة المستخدم باستخدام Streamlit
 st.title('Inventory Management System')
@@ -77,13 +81,15 @@ password = st.sidebar.text_input('Password', type='password')
 user_id = None
 
 if st.sidebar.button('Login'):
-    c.execute('SELECT user_id FROM users WHERE username=? AND password=?', (username, password))
-    user = c.fetchone()
-    if user:
-        user_id = user[0]
-        st.sidebar.success('Logged in as {}'.format(username))
-    else:
-        st.sidebar.error('Invalid username or password')
+    with sqlite3.connect('inventory.db') as conn:
+        c = conn.cursor()
+        c.execute('SELECT user_id FROM users WHERE username=? AND password=?', (username, password))
+        user = c.fetchone()
+        if user:
+            user_id = user[0]
+            st.sidebar.success('Logged in as {}'.format(username))
+        else:
+            st.sidebar.error('Invalid username or password')
 
 # إضافة جزء لإدارة المستخدمين
 if st.sidebar.checkbox('Manage Users'):
@@ -92,9 +98,11 @@ if st.sidebar.checkbox('Manage Users'):
     new_password = st.sidebar.text_input('New Password', type='password')
     if st.sidebar.button('Add User'):
         if new_username and new_password:
-            c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (new_username, new_password))
-            conn.commit()
-            st.sidebar.success('User added successfully')
+            with sqlite3.connect('inventory.db') as conn:
+                c = conn.cursor()
+                c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (new_username, new_password))
+                conn.commit()
+                st.sidebar.success('User added successfully')
         else:
             st.sidebar.error('Please enter both username and password')
 
@@ -117,4 +125,3 @@ if user_id:
         else:
             st.error('Failed to update quantity')
 
-conn.close()
