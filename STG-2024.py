@@ -56,7 +56,7 @@ def show_quantity(item_name):
     return result[0] if result else None
 
 # وظيفة لتحديث الكمية
-def update_quantity(user_id, Item Name, change_type, change_quantity):
+def update_quantity(user_id, item_name, change_type, change_quantity):
     current_quantity = show_quantity(item_name)
     if current_quantity is not None:
         new_quantity = current_quantity + change_quantity if change_type == 'add' else current_quantity - change_quantity
