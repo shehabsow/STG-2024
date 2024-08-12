@@ -6,7 +6,7 @@ from datetime import datetime
 # تحميل بيانات الإكسل إلى DataFrame
 excel_file = 'path/to/yourfile.xlsx'
 
-df= pd.read_csv('matril.csv')
+df = pd.read_csv('matril.csv')
 
 # إنشاء أو الاتصال بقاعدة البيانات
 conn = sqlite3.connect('inventory.db')
@@ -84,6 +84,19 @@ if st.sidebar.button('Login'):
         st.sidebar.success('Logged in as {}'.format(username))
     else:
         st.sidebar.error('Invalid username or password')
+
+# إضافة جزء لإدارة المستخدمين
+if st.sidebar.checkbox('Manage Users'):
+    st.sidebar.subheader('Add New User')
+    new_username = st.sidebar.text_input('New Username')
+    new_password = st.sidebar.text_input('New Password', type='password')
+    if st.sidebar.button('Add User'):
+        if new_username and new_password:
+            c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (new_username, new_password))
+            conn.commit()
+            st.sidebar.success('User added successfully')
+        else:
+            st.sidebar.error('Please enter both username and password')
 
 if user_id:
     st.header('Welcome, {}'.format(username))
