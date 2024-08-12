@@ -110,9 +110,9 @@ if user_id:
     st.header('Welcome, {}'.format(username))
     
     # عرض الكمية الحالية
-    item_name = st.selectbox('Select Item', df['Item Name'].unique())
-    if item_name:
-        st.write('Current quantity of {}: {}'.format(item_name, show_quantity(item_name)))
+    #item_name = st.selectbox('Select Item', df['Item Name'].unique())
+    #if item_name:
+        #st.write('Current quantity of {}: {}'.format(item_name, show_quantity(item_name)))
 
     # تحديث الكمية
     change_type = st.selectbox('Change Type', ['add', 'subtract'])
