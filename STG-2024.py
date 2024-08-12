@@ -15,7 +15,7 @@ c = conn.cursor()
 # إنشاء جدول البيانات الأساسي إذا لم يكن موجوداً
 c.execute('''
 CREATE TABLE IF NOT EXISTS inventory (
-    item_name TEXT,
+    Item Name TEXT,
     actual_quantity INTEGER,
     monthly_consumption REAL,
     coverage_in_month REAL
@@ -51,17 +51,17 @@ conn.commit()
 
 # وظيفة لإظهار الكمية الموجودة
 def show_quantity(item_name):
-    c.execute('SELECT actual_quantity FROM inventory WHERE item_name=?', (item_name,))
+    c.execute('SELECT actual_quantity FROM inventory WHERE Item Name=?', (Item Name,))
     result = c.fetchone()
     return result[0] if result else None
 
 # وظيفة لتحديث الكمية
-def update_quantity(user_id, item_name, change_type, change_quantity):
+def update_quantity(user_id, Item Name, change_type, change_quantity):
     current_quantity = show_quantity(item_name)
     if current_quantity is not None:
         new_quantity = current_quantity + change_quantity if change_type == 'add' else current_quantity - change_quantity
-        c.execute('UPDATE inventory SET actual_quantity=? WHERE item_name=?', (new_quantity, item_name))
-        c.execute('INSERT INTO changes (user_id, item_name, change_type, change_quantity) VALUES (?, ?, ?, ?)', (user_id, item_name, change_type, change_quantity))
+        c.execute('UPDATE inventory SET actual_quantity=? WHERE Item Name=?', (new_quantity, Item Name))
+        c.execute('INSERT INTO changes (user_id, Item Name, change_type, change_quantity) VALUES (?, ?, ?, ?)', (user_id, Item Name, change_type, change_quantity))
         conn.commit()
         return new_quantity
     else:
