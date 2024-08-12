@@ -51,7 +51,7 @@ conn.commit()
 
 # وظيفة لإظهار الكمية الموجودة
 def show_quantity(item_name):
-    c.execute('SELECT actual_quantity FROM inventory WHERE Item Name=?', (Item Name,))
+    c.execute('SELECT actual_quantity FROM inventory WHERE item_name=?', (item_name,))
     result = c.fetchone()
     return result[0] if result else None
 
