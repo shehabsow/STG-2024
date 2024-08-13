@@ -289,6 +289,9 @@ else:
                     col4, col5, col6 = st.columns([2,1,2])
                     with col4:
                         display_tab('MultiPharma Cartridge', 120)
+
+            csv = df_Material.to_csv(index=False)
+            st.download_button(label="Download updated sheet", data=csv, file_name='updated.csv', mime='text/csv')
         
                 
         
