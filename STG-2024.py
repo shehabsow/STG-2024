@@ -75,7 +75,7 @@ def update_password(username, new_password, confirm_new_password):
         
 # دالة لتحديث الكمية
 def update_quantity(row_index, quantity, operation, username):
-    old_quantity = st.session_state.df.loc[row_index, 'Actual Quantity']
+    last_month = st.session_state.df.loc[row_index, 'Actual Quantity']
     if operation == 'add':
         st.session_state.df.loc[row_index, 'Actual Quantity'] += quantity
     elif operation == 'subtract':
@@ -87,7 +87,7 @@ def update_quantity(row_index, quantity, operation, username):
         'user': username,
         'time': datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
         'item': st.session_state.df.loc[row_index, 'Item Name'],
-        'old_quantity': old_quantity,
+        'last_month': last_month,
         'new_quantity': new_quantity,
         'operation': operation
     }
