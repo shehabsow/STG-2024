@@ -288,7 +288,6 @@ else:
                 main()
         elif page == 'View Logs':
             st.header('User Activity Logs')
-            st.header('User Activity Logs')
             if st.session_state.logs:
                 logs_df = pd.DataFrame(st.session_state.logs)
                 st.dataframe(logs_df, width=1000, height=400)
