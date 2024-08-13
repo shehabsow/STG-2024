@@ -288,7 +288,4 @@ else:
                 main()
         
         elif page == 'View Logs':
-            st.header('User Activity Logs')
             
-            else:
-                st.write("No logs available.")
