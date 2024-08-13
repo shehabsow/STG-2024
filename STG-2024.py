@@ -138,7 +138,14 @@ def display_tab(tab_name, min_quantity):
     if tab_alerts:
         st.error(f"Low stock for items in {tab_name}:")
         st.dataframe(df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity']))
-        
+
+
+def clear_logs():
+    st.session_state.logs = []
+    logs_df = pd.DataFrame(columns=['user', 'time', 'item', 'old_quantity', 'new_quantity', 'operation'])
+    save_logs(logs_df)
+    st.success("Logs cleared successfully!")
+    
 users = load_users()
 
 # واجهة تسجيل الدخول
@@ -293,6 +300,8 @@ else:
                 st.dataframe(logs_df, width=1000, height=400)
                 csv = logs_df.to_csv(index=False)
                 st.download_button(label="Download Logs as CSV", data=csv, file_name='user_logs.csv', mime='text/csv')
+                if st.button("Clear Logs"):
+                    clear_logs()
             
             else:
                 st.write("No logs available.")
