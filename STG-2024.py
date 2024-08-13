@@ -3,8 +3,6 @@ import pandas as pd
 import pytz
 import sqlite3
 from datetime import datetime, timedelta
-import json
-import os
 
 st.set_page_config(
     layout="wide",
@@ -57,9 +55,9 @@ def load_users():
     if not users:
         users = {
             "knhp322": {"password": "knhp322", "first_login": True, "name": "Shehab Ayman", "last_password_update": str(datetime.now(egypt_tz))},
-            "KFXW551": {"password": "KFXW551", "first_login": True, "name": " Hossameldin Mostafa", "last_password_update": str(datetime.now(egypt_tz))},
-            "knvp968": {"password": "knvp968", "first_login": True, "name": "  Mohamed Nader", "last_password_update": str(datetime.now(egypt_tz))},
-            "kcqw615": {"password": "kcqw615", "first_login": True, "name": "Tareek Mahmoud ", "last_password_update": str(datetime.now(egypt_tz))}
+            "KFXW551": {"password": "KFXW551", "first_login": True, "name": "Hossameldin Mostafa", "last_password_update": str(datetime.now(egypt_tz))},
+            "knvp968": {"password": "knvp968", "first_login": True, "name": "Mohamed Nader", "last_password_update": str(datetime.now(egypt_tz))},
+            "kcqw615": {"password": "kcqw615", "first_login": True, "name": "Tareek Mahmoud", "last_password_update": str(datetime.now(egypt_tz))}
         }
         for username, data in users.items():
             c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?)",
@@ -86,6 +84,23 @@ def load_logs():
 def save_logs(logs):
     c.executemany("INSERT INTO logs (user, time, item, old_quantity, new_quantity, operation) VALUES (?, ?, ?, ?, ?, ?)", logs)
     conn.commit()
+
+# Add default materials to database if not exists
+def add_default_materials():
+    c.execute("SELECT COUNT(*) FROM materials")
+    count = c.fetchone()[0]
+    if count == 0:
+        default_materials = [
+            ('Reel Label (Small)', 50),
+            ('Reel Label (Large)', 100),
+            ('Ink Reels for Label', 150),
+            ('Red Tape', 30),
+            ('Adhesive Tape', 200),
+            ('Cartridges', 60),
+            ('MultiPharma Cartridge', 20)
+        ]
+        c.executemany("INSERT INTO materials (item_name, actual_quantity) VALUES (?, ?)", default_materials)
+        conn.commit()
 
 # Login function
 def login(username, password):
@@ -181,6 +196,9 @@ def clear_logs():
 users = load_users()
 st.session_state.logs = load_logs()
 
+# Add default materials
+add_default_materials()
+
 # Login interface
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -196,7 +214,7 @@ else:
     if st.session_state.first_login:
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
-            st.subheader("Change Password")
+            st.subheader("First Login. Please Change Password")
             new_password = st.text_input("New Password", type="password")
             confirm_new_password = st.text_input("Confirm Password", type="password")
             if st.button("Change Password"):
@@ -219,7 +237,7 @@ else:
         else:
             df = pd.read_sql_query("SELECT * FROM materials", conn)
             st.session_state.df = df
-            
+
             if 'alerts' not in st.session_state:
                 check_quantities()
             if st.session_state.alerts:
@@ -229,7 +247,7 @@ else:
 
             st.sidebar.header("Inventory Management")
             page = st.sidebar.radio('Select page', ['STG-2024', 'View Logs'])
-            
+
             if page == 'STG-2024':
                 def main():
                     st.markdown("""
@@ -240,11 +258,11 @@ else:
                         }
                     </style>
                     """, unsafe_allow_html=True)
-                    
+
                     with st.spinner("Data loaded successfully!"):
                         import time
                         time.sleep(1)
-                    
+
                     col1, col2 = st.columns([2, 0.75])
                     with col1:
                         st.markdown("""
@@ -252,36 +270,36 @@ else:
                                 Find your parts
                             </h2>
                         """, unsafe_allow_html=True)
-                    
+
                     with col2:
                         search_keyword = st.session_state.get('search_keyword', '')
                         search_keyword = st.text_input("Enter keyword to search:", search_keyword)
                         search_button = st.button("Search")
                         search_option = 'All Columns'
-                    
+
                     def search_in_dataframe(df, keyword, option):
                         if option == 'All Columns':
                             result = df[df.apply(lambda row: row.astype(str).str.contains(keyword, case=False).any(), axis=1)]
                         else:
                             result = df[df[option].astype(str).str.contains(keyword, case=False)]
                         return result
-                    
+
                     if st.session_state.get('refreshed', False):
                         st.session_state.search_keyword = ''
                         st.session_state.refreshed = False
-                    
+
                     if search_button and search_keyword:
                         st.session_state.search_keyword = search_keyword
                         search_results = search_in_dataframe(st.session_state.df, search_keyword, search_option)
                         st.write(f"Search results for '{search_keyword}' in {search_option}:")
                         st.dataframe(search_results, width=1000, height=200)
-                    st.session_state.refreshed = True 
-                    
+                    st.session_state.refreshed = True
+
                     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
                         'Reel Label (Small)', 'Reel Label (Large)',
                         'Ink Reels for Label', 'Red Tape', 'Adhesive Tape', 'Cartridges', 'MultiPharma Cartridge'
                     ])
-                    
+
                     with tab1:
                         display_tab('Reel Label (Small)', 20)
                     with tab2:
@@ -300,9 +318,7 @@ else:
                     st.button("updated page")
                     csv = st.session_state.df.to_csv(index=False)
                     st.download_button(label="Download updated sheet", data=csv, file_name='updated.csv', mime='text/csv')
-            
-                    
-            
+
                 if __name__ == '__main__':
                     main()
             elif page == 'View Logs':
