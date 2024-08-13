@@ -132,18 +132,22 @@ def update_password(username, new_password, confirm_new_password):
 # Update quantity function
 def update_quantity(row_index, quantity, operation, username):
     c.execute("SELECT actual_quantity FROM materials WHERE id = ?", (row_index,))
-    last_month = c.fetchone()[0]
-    if operation == 'add':
-        new_quantity = last_month + quantity
-    elif operation == 'subtract':
-        new_quantity = last_month - quantity
-    c.execute("UPDATE materials SET actual_quantity = ? WHERE id = ?", (new_quantity, row_index))
-    conn.commit()
-    st.success(f"Quantity updated successfully by {username}! New Quantity: {new_quantity}")
-    log_entry = (username, datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'), row_index, last_month, new_quantity, operation)
-    c.execute("INSERT INTO logs (user, time, item, old_quantity, new_quantity, operation) VALUES (?, ?, ?, ?, ?, ?)", log_entry)
-    conn.commit()
-    check_quantities()
+    result = c.fetchone()
+    if result:
+        last_month = result[0]
+        if operation == 'add':
+            new_quantity = last_month + quantity
+        elif operation == 'subtract':
+            new_quantity = last_month - quantity
+        c.execute("UPDATE materials SET actual_quantity = ? WHERE id = ?", (new_quantity, row_index))
+        conn.commit()
+        st.success(f"Quantity updated successfully by {username}! New Quantity: {new_quantity}")
+        log_entry = (username, datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'), row_index, last_month, new_quantity, operation)
+        c.execute("INSERT INTO logs (user, time, item, old_quantity, new_quantity, operation) VALUES (?, ?, ?, ?, ?, ?)", log_entry)
+        conn.commit()
+        check_quantities()
+    else:
+        st.error("No data found for the selected item.")
 
 # Check quantities and update alerts
 def check_quantities():
@@ -202,10 +206,13 @@ add_default_materials()
 # Login interface
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
+    st.session_state.first_login = False
+    st.session_state.password_expired = False
 
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
+        st.subheader("Login")
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
         if st.button("Login"):
@@ -332,3 +339,4 @@ else:
                         clear_logs()
                 else:
                     st.write("No logs available.")
+
