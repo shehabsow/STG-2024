@@ -37,7 +37,8 @@ def save_users(users):
         json.dump(users, f)
 
 # Load logs from files
-
+def save_logs(logs_df):
+    logs_df.to_csv('logs.csv', index=False)
 
 def save_alerts(alerts):
     with open('alerts.json', 'w') as f:
