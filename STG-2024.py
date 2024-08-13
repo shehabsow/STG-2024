@@ -289,14 +289,6 @@ else:
         
         elif page == 'View Logs':
             st.header('User Activity Logs')
-            if st.session_state.logs:
-                logs_df = pd.DataFrame(st.session_state.logs)
-                st.dataframe(logs_df, width=1000, height=400)
-                csv = logs_df.to_csv(index=False)
-                st.download_button(label="Download Logs as sheet", data=csv, file_name='user_logs.csv', mime='text/csv')
-                if st.button('Clear Logs'):
-                    st.session_state.logs = []
-                    st.success('Logs have been cleared.')
-                    st.experimental_rerun()
+            
             else:
                 st.write("No logs available.")
