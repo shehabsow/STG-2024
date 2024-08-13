@@ -302,8 +302,8 @@ else:
                 st.dataframe(logs_df, width=1000, height=400)
                 csv = logs_df.to_csv(index=False)
                 st.download_button(label="Download Logs as CSV", data=csv, file_name='user_logs.csv', mime='text/csv')
-                if st.button("Clear Logs"):
-                    clear_logs()
+                #if st.button("Clear Logs"):
+                    #clear_logs()
             
             else:
                 st.write("No logs available.")
