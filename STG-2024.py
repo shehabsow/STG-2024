@@ -287,5 +287,4 @@ else:
             if __name__ == '__main__':
                 main()
         
-        elif page == 'View Logs':
-            
+
