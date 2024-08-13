@@ -37,18 +37,7 @@ def save_users(users):
         json.dump(users, f)
 
 # Load logs from files
-def load_logs():
-    try:
-        logs_location = pd.read_csv('logs_location.csv').to_dict('records')
-    except FileNotFoundError:
-        logs_location = []
-    
-    try:
-        logs_receving = pd.read_csv('logs_receving.csv').to_dict('records')
-    except FileNotFoundError:
-        logs_receving = []
 
-    return logs_location, logs_receving
 
 def save_alerts(alerts):
     with open('alerts.json', 'w') as f:
