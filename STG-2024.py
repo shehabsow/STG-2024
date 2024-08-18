@@ -90,19 +90,18 @@ def save_logs(logs):
 # إضافة المواد الافتراضية إلى قاعدة البيانات إذا لم تكن موجودة
 def add_default_materials():
     c.execute("SELECT COUNT(*) FROM materials")
-    count = c.fetchone()[0]
-    if count == 0:
-        default_materials = [
-            ('Reel Label (Small)', 50, 100),
-            ('Reel Label (Large)', 100, 200),
-            ('Ink Reels for Label', 150, 300),
-            ('Red Tape', 30, 50),
-            ('Adhesive Tape', 200, 400),
-            ('Cartridges', 60, 120),
-            ('MultiPharma Cartridge', 20, 40)
-        ]
-        c.executemany("INSERT INTO materials (item_name, actual_quantity, monthly_quantity) VALUES (?, ?, ?)", default_materials)
-        conn.commit()
+    default_materials = c.fetchall()
+    default_materials = [
+        ('Reel Label (Small)', 50, 100),
+        ('Reel Label (Large)', 100, 200),
+        ('Ink Reels for Label', 150, 300),
+        ('Red Tape', 30, 50),
+        ('Adhesive Tape', 200, 400),
+        ('Cartridges', 60, 120),
+        ('MultiPharma Cartridge', 20, 40)
+    ]
+    c.executemany("INSERT INTO materials (item_name, actual_quantity, monthly_quantity) VALUES (?, ?, ?)", default_materials)
+    conn.commit()
 
 # وظيفة تسجيل الدخول
 def login(username, password):
