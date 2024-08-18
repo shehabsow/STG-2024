@@ -198,17 +198,19 @@ def clear_logs():
     conn.commit()
     st.success("Logs cleared successfully!")
 
-# تحميل المستخدمين والسجلات
+# تحميل البيانات عند بدء تشغيل التطبيق
 users = load_users()
-st.session_state.logs = load_logs()
-
-# إضافة المواد الافتراضية
+logs = load_logs()
 add_default_materials()
 
-# واجهة تسجيل الدخول
+# بدء تشغيل التطبيق
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
+
+if 'first_login' not in st.session_state:
     st.session_state.first_login = False
+
+if 'password_expired' not in st.session_state:
     st.session_state.password_expired = False
 
 if not st.session_state.logged_in:
