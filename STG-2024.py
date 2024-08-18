@@ -90,18 +90,19 @@ def save_logs(logs):
 # إضافة المواد الافتراضية إلى قاعدة البيانات إذا لم تكن موجودة
 def add_default_materials():
     c.execute("SELECT COUNT(*) FROM materials")
-    default_materials = c.fetchall()
-    default_materials = [
-        ('Reel Label (Small)', 50, 100),
-        ('Reel Label (Large)', 100, 200),
-        ('Ink Reels for Label', 150, 300),
-        ('Red Tape', 30, 50),
-        ('Adhesive Tape', 200, 400),
-        ('Cartridges', 60, 120),
-        ('MultiPharma Cartridge', 20, 40)
-    ]
-    c.executemany("INSERT INTO materials (item_name, actual_quantity, monthly_quantity) VALUES (?, ?, ?)", default_materials)
-    conn.commit()
+    count = c.fetchone()[0]
+    if count == 0:
+        default_materials = [
+            ('Reel Label (Small)', 50, 100),
+            ('Reel Label (Large)', 100, 200),
+            ('Ink Reels for Label', 150, 300),
+            ('Red Tape', 30, 50),
+            ('Adhesive Tape', 200, 400),
+            ('Cartridges', 60, 120),
+            ('MultiPharma Cartridge', 20, 40)
+        ]
+        c.executemany("INSERT INTO materials (item_name, actual_quantity, monthly_quantity) VALUES (?, ?, ?)", default_materials)
+        conn.commit()
 
 # وظيفة تسجيل الدخول
 def login(username, password):
@@ -197,19 +198,17 @@ def clear_logs():
     conn.commit()
     st.success("Logs cleared successfully!")
 
-# تحميل البيانات عند بدء تشغيل التطبيق
+# تحميل المستخدمين والسجلات
 users = load_users()
-logs = load_logs()
+st.session_state.logs = load_logs()
+
+# إضافة المواد الافتراضية
 add_default_materials()
 
-# بدء تشغيل التطبيق
+# واجهة تسجيل الدخول
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
-
-if 'first_login' not in st.session_state:
     st.session_state.first_login = False
-
-if 'password_expired' not in st.session_state:
     st.session_state.password_expired = False
 
 if not st.session_state.logged_in:
