@@ -90,8 +90,8 @@ def save_logs(logs):
 # إضافة المواد الافتراضية إلى قاعدة البيانات إذا لم تكن موجودة
 def add_default_materials():
     c.execute("SELECT COUNT(*) FROM materials")
-    count = c.fetchone()[1]
-    if count == 1:
+    count = c.fetchone()[0]
+    if count == 0:
         default_materials = [
             ('Reel Label (Small)', 50, 100),
             ('Reel Label (Large)', 100, 200),
