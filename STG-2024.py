@@ -1,19 +1,13 @@
 import streamlit as st
 import pandas as pd
-import pytz
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # إعداد صفحة التطبيق
-st.set_page_config(
-    layout="wide",
-    page_title='STG-2024',
-    page_icon='🪙')
-
-egypt_tz = pytz.timezone('Africa/Cairo')
+st.set_page_config(layout="wide", page_title='Materials Management', page_icon='🪙')
 
 # إنشاء اتصال بقاعدة بيانات SQLite
-conn = sqlite3.connect('materials.db')
+conn = sqlite3.connect('new_materials.db')
 c = conn.cursor()
 
 # إنشاء الجداول إذا لم تكن موجودة
@@ -22,70 +16,35 @@ CREATE TABLE IF NOT EXISTS materials (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     item_name TEXT,
     actual_quantity INTEGER,
-    monthly_quantity INTEGER
+    monthly_quantity INTEGER,
+    description TEXT
 )
 ''')
 
 c.execute('''
 CREATE TABLE IF NOT EXISTS users (
-    username TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE,
     password TEXT,
-    first_login BOOLEAN,
-    name TEXT,
-    last_password_update TEXT
+    name TEXT
 )
 ''')
 
 c.execute('''
 CREATE TABLE IF NOT EXISTS logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user TEXT,
+    user_id INTEGER,
     time TEXT,
-    item TEXT,
+    item_id INTEGER,
     old_quantity INTEGER,
     new_quantity INTEGER,
-    operation TEXT
+    operation TEXT,
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (item_id) REFERENCES materials (id)
 )
 ''')
 
 conn.commit()
-
-# تحميل بيانات المستخدمين
-def load_users():
-    c.execute("SELECT * FROM users")
-    users = c.fetchall()
-    if not users:
-        users = {
-            "knhp322": {"password": "knhp322", "first_login": True, "name": "Shehab Ayman", "last_password_update": str(datetime.now(egypt_tz))},
-            "KFXW551": {"password": "KFXW551", "first_login": True, "name": "Hossameldin Mostafa", "last_password_update": str(datetime.now(egypt_tz))},
-            "knvp968": {"password": "knvp968", "first_login": True, "name": "Mohamed Nader", "last_password_update": str(datetime.now(egypt_tz))},
-            "kcqw615": {"password": "kcqw615", "first_login": True, "name": "Tareek Mahmoud", "last_password_update": str(datetime.now(egypt_tz))}
-        }
-        for username, data in users.items():
-            c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?)",
-                      (username, data['password'], data['first_login'], data['name'], data['last_password_update']))
-        conn.commit()
-    else:
-        users = {user[0]: {"password": user[1], "first_login": user[2], "name": user[3], "last_password_update": user[4]} for user in users}
-    return users
-
-# حفظ بيانات المستخدمين في قاعدة البيانات
-def save_users(users):
-    for username, data in users.items():
-        c.execute("UPDATE users SET password = ?, first_login = ?, last_password_update = ? WHERE username = ?",
-                  (data['password'], data['first_login'], data['last_password_update'], username))
-    conn.commit()
-
-# تحميل السجلات من قاعدة البيانات
-def load_logs():
-    c.execute("SELECT * FROM logs")
-    logs = c.fetchall()
-    return logs
-
-# حفظ السجلات في قاعدة البيانات
-def save_logs(logs):
-    c.executemany("INSERT INTO logs (user, time, item, old_quantity, new_quantity, operation) VALUES (?, ?, ?, ?, ?, ?)", logs)
-    conn.commit()
 
 # إضافة المواد الافتراضية إلى قاعدة البيانات إذا لم تكن موجودة
 def add_default_materials():
@@ -93,47 +52,47 @@ def add_default_materials():
     count = c.fetchone()[0]
     if count == 0:
         default_materials = [
-            ('Reel Label (Small)', 50, 100),
-            ('Reel Label (Large)', 100, 200),
-            ('Ink Reels for Label', 150, 300),
-            ('Red Tape', 30, 50),
-            ('Adhesive Tape', 200, 400),
-            ('Cartridges', 60, 120),
-            ('MultiPharma Cartridge', 20, 40)
+            ('Reel Label (Small)', 50, 100, 'Description for Reel Label (Small)'),
+            ('Reel Label (Large)', 100, 200, 'Description for Reel Label (Large)'),
+            ('Ink Reels for Label', 150, 300, 'Description for Ink Reels for Label'),
+            ('Red Tape', 30, 50, 'Description for Red Tape'),
+            ('Adhesive Tape', 200, 400, 'Description for Adhesive Tape'),
+            ('Cartridges', 60, 120, 'Description for Cartridges'),
+            ('MultiPharma Cartridge', 20, 40, 'Description for MultiPharma Cartridge')
         ]
-        c.executemany("INSERT INTO materials (item_name, actual_quantity, monthly_quantity) VALUES (?, ?, ?)", default_materials)
+        c.executemany("INSERT INTO materials (item_name, actual_quantity, monthly_quantity, description) VALUES (?, ?, ?, ?)", default_materials)
+        conn.commit()
+
+# إضافة المستخدمين الافتراضيين إلى قاعدة البيانات إذا لم تكن موجودة
+def add_default_users():
+    c.execute("SELECT COUNT(*) FROM users")
+    count = c.fetchone()[0]
+    if count == 0:
+        default_users = [
+            ('user1', 'password1', 'User One'),
+            ('user2', 'password2', 'User Two'),
+            ('user3', 'password3', 'User Three'),
+            ('user4', 'password4', 'User Four'),
+            ('user5', 'password5', 'User Five')
+        ]
+        c.executemany("INSERT INTO users (username, password, name) VALUES (?, ?, ?)", default_users)
         conn.commit()
 
 # وظيفة تسجيل الدخول
 def login(username, password):
-    if username in users and users[username]["password"] == password:
+    c.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
+    user = c.fetchone()
+    if user:
         st.session_state.logged_in = True
+        st.session_state.user_id = user[0]
         st.session_state.username = username
-        st.session_state.first_login = users[username]["first_login"]
-        last_password_update = datetime.strptime(users[username]["last_password_update"], '%Y-%m-%d %H:%M:%S.%f%z')
-        if datetime.now(egypt_tz) - last_password_update > timedelta(days=30):
-            st.session_state.password_expired = True
-        else:
-            st.session_state.password_expired = False
+        st.session_state.name = user[3]
     else:
         st.error("Incorrect username or password")
 
-# وظيفة تحديث كلمة المرور
-def update_password(username, new_password, confirm_new_password):
-    if new_password == confirm_new_password:
-        users[username]["password"] = new_password
-        users[username]["first_login"] = False
-        users[username]["last_password_update"] = str(datetime.now(egypt_tz))
-        save_users(users)
-        st.session_state.first_login = False
-        st.session_state.password_expired = False
-        st.success("Password updated successfully!")
-    else:
-        st.error("Passwords do not match!")
-
 # وظيفة تحديث الكمية
-def update_quantity(row_index, quantity, operation, username):
-    c.execute("SELECT actual_quantity FROM materials WHERE id = ?", (row_index,))
+def update_quantity(item_id, quantity, operation, user_id):
+    c.execute("SELECT actual_quantity FROM materials WHERE id = ?", (item_id,))
     result = c.fetchone()
     if result:
         last_quantity = result[0]
@@ -141,75 +100,52 @@ def update_quantity(row_index, quantity, operation, username):
             new_quantity = last_quantity + quantity
         elif operation == 'subtract':
             new_quantity = last_quantity - quantity
-        c.execute("UPDATE materials SET actual_quantity = ? WHERE id = ?", (new_quantity, row_index))
+        c.execute("UPDATE materials SET actual_quantity = ? WHERE id = ?", (new_quantity, item_id))
         conn.commit()
-        st.success(f"Quantity updated successfully by {username}! New Quantity: {new_quantity}")
-        log_entry = (username, datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'), row_index, last_quantity, new_quantity, operation)
-        c.execute("INSERT INTO logs (user, time, item, old_quantity, new_quantity, operation) VALUES (?, ?, ?, ?, ?, ?)", log_entry)
+        st.success(f"Quantity updated successfully! New Quantity: {new_quantity}")
+        log_entry = (user_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), item_id, last_quantity, new_quantity, operation)
+        c.execute("INSERT INTO logs (user_id, time, item_id, old_quantity, new_quantity, operation) VALUES (?, ?, ?, ?, ?, ?)", log_entry)
         conn.commit()
-        check_quantities()
     else:
         st.error("No data found for the selected item.")
 
-# وظيفة التحقق من الكميات
-def check_quantities():
-    c.execute("SELECT item_name FROM materials WHERE actual_quantity < 100")
-    new_alerts = c.fetchall()
-    st.session_state.alerts = [alert[0] for alert in new_alerts]
-
-# وظيفة التحقق من الكميات لعناصر محددة
-def check_tab_quantities(tab_name, min_quantity):
-    c.execute("SELECT * FROM materials WHERE item_name = ?", (tab_name,))
-    df_tab = c.fetchall()
-    tab_alerts = [item for item in df_tab if item[2] < min_quantity]
-    return tab_alerts, df_tab
-
 # وظيفة عرض علامة التبويب
-def display_tab(tab_name, min_quantity):
-    st.header(f'{tab_name}')
-    c.execute("SELECT * FROM materials WHERE item_name = ?", (tab_name,))
-    df_tab = c.fetchall()
+def display_tab(item_name):
+    st.header(f'{item_name}')
+    c.execute("SELECT * FROM materials WHERE item_name = ?", (item_name,))
+    df_tab = c.fetchone()
     if df_tab:
-        df_tab_df = pd.DataFrame(df_tab, columns=['ID', 'Item Name', 'Actual Quantity', 'Monthly Quantity'])
-        row_number = st.number_input(f'Select row number for {tab_name}:', min_value=0, max_value=len(df_tab_df)-1, step=1, key=f'{tab_name}_row_number')
-        item, quantity = df_tab_df.iloc[row_number][['Item Name', 'Actual Quantity']]
-
         st.markdown(f"""
-        <div style='font-size: 20px; color: blue;'>Selected Item: {item}</div>
-        <div style='font-size: 20px; color: blue;'>Current Quantity: {quantity}</div>
+        <div style='font-size: 20px; color: blue;'>Selected Item: {df_tab[1]}</div>
+        <div style='font-size: 20px; color: blue;'>Current Quantity: {df_tab[2]}</div>
+        <div style='font-size: 20px; color: blue;'>Description: {df_tab[4]}</div>
         """, unsafe_allow_html=True)
 
-        quantity = st.number_input(f'Enter quantity for {tab_name}:', min_value=1, step=1, key=f'{tab_name}_quantity')
-        operation = st.radio(f'Choose operation for {tab_name}:', ('add', 'subtract'), key=f'{tab_name}_operation')
+        quantity = st.number_input(f'Enter quantity for {item_name}:', min_value=1, step=1, key=f'{item_name}_quantity')
+        operation = st.radio(f'Choose operation for {item_name}:', ('add', 'subtract'), key=f'{item_name}_operation')
 
-        if st.button('Update Quantity', key=f'{tab_name}_update_button'):
-            update_quantity(df_tab_df.iloc[row_number]['ID'], quantity, operation, st.session_state.username)
-
-        tab_alerts, _ = check_tab_quantities(tab_name, min_quantity)
-        if tab_alerts:
-            st.error(f"Low stock for items in {tab_name}:")
-            st.dataframe(df_tab_df.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity']))
+        if st.button('Update Quantity', key=f'{item_name}_update_button'):
+            update_quantity(df_tab[0], quantity, operation, st.session_state.user_id)
     else:
-        st.error(f"No data available for {tab_name}")
+        st.error(f"No data available for {item_name}")
 
-# وظيفة مسح السجلات
-def clear_logs():
-    c.execute("DELETE FROM logs")
-    conn.commit()
-    st.success("Logs cleared successfully!")
+# وظيفة عرض السجلات
+def display_logs():
+    c.execute("SELECT logs.id, users.name, logs.time, materials.item_name, logs.old_quantity, logs.new_quantity, logs.operation FROM logs JOIN users ON logs.user_id = users.id JOIN materials ON logs.item_id = materials.id")
+    logs = c.fetchall()
+    if logs:
+        logs_df = pd.DataFrame(logs, columns=['Log ID', 'User', 'Time', 'Item', 'Old Quantity', 'New Quantity', 'Operation'])
+        st.dataframe(logs_df)
+    else:
+        st.info("No logs available.")
 
-# تحميل المستخدمين والسجلات
-users = load_users()
-st.session_state.logs = load_logs()
-
-# إضافة المواد الافتراضية
+# تحميل البيانات عند بدء تشغيل التطبيق
 add_default_materials()
+add_default_users()
 
-# واجهة تسجيل الدخول
+# بدء تشغيل التطبيق
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
-    st.session_state.first_login = False
-    st.session_state.password_expired = False
 
 if not st.session_state.logged_in:
     st.title("Login")
@@ -218,54 +154,30 @@ if not st.session_state.logged_in:
     if st.button("Login"):
         login(username, password)
 else:
-    if st.session_state.first_login or st.session_state.password_expired:
-        st.title("Update Password")
-        new_password = st.text_input("New Password", type="password")
-        confirm_new_password = st.text_input("Confirm New Password", type="password")
-        if st.button("Update Password"):
-            update_password(st.session_state.username, new_password, confirm_new_password)
-    else:
-        st.title("Materials Management")
+    st.title(f"Welcome {st.session_state.name}")
+    st.sidebar.title("Navigation")
+    pages = ["Materials", "Logs"]
+    page = st.sidebar.radio("Go to", pages)
 
+    if page == "Materials":
         tab_names = ['Reel Label (Small)', 'Reel Label (Large)', 'Ink Reels for Label', 'Red Tape', 'Adhesive Tape', 'Cartridges', 'MultiPharma Cartridge']
-        tab_min_quantities = [50, 50, 50, 50, 50, 50, 50]
-
         tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(tab_names)
 
         with tab1:
-            display_tab('Reel Label (Small)', tab_min_quantities[0])
-
+            display_tab('Reel Label (Small)')
         with tab2:
-            display_tab('Reel Label (Large)', tab_min_quantities[1])
-
+            display_tab('Reel Label (Large)')
         with tab3:
-            display_tab('Ink Reels for Label', tab_min_quantities[2])
-
+            display_tab('Ink Reels for Label')
         with tab4:
-            display_tab('Red Tape', tab_min_quantities[3])
-
+            display_tab('Red Tape')
         with tab5:
-            display_tab('Adhesive Tape', tab_min_quantities[4])
-
+            display_tab('Adhesive Tape')
         with tab6:
-            display_tab('Cartridges', tab_min_quantities[5])
-
+            display_tab('Cartridges')
         with tab7:
-            display_tab('MultiPharma Cartridge', tab_min_quantities[6])
-
-        st.header("Alerts")
-        if 'alerts' not in st.session_state:
-            st.session_state.alerts = []
-        if st.session_state.alerts:
-            st.error(f"Low stock for items: {', '.join(st.session_state.alerts)}")
-        else:
-            st.success("All items are sufficiently stocked.")
-
-        if st.button("Clear Logs"):
-            clear_logs()
-
-        st.header("Logs")
-        logs_df = pd.DataFrame(st.session_state.logs, columns=['ID', 'User', 'Time', 'Item', 'Old Quantity', 'New Quantity', 'Operation'])
-        st.dataframe(logs_df)
+            display_tab('MultiPharma Cartridge')
+    elif page == "Logs":
+        display_logs()
 
 conn.close()
