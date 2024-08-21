@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 from datetime import datetime
-import mysql.connector
+#import mysql.connector
 # إعداد صفحة التطبيق
 st.set_page_config(layout="wide", page_title='Materials Management', page_icon='🪙')
 
@@ -142,6 +142,13 @@ def display_logs():
 # تحميل البيانات عند بدء تشغيل التطبيق
 add_default_materials()
 add_default_users()
+with open('new_materials.db', 'rb') as file:
+    st.download_button(
+        label="Download Database",
+        data=file,
+        file_name="new_materials.db",
+        mime="application/octet-stream"
+    )
 
 # بدء تشغيل التطبيق
 if 'logged_in' not in st.session_state:
