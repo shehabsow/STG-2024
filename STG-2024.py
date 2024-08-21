@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 from datetime import datetime
-
+import mysql.connector
 # إعداد صفحة التطبيق
 st.set_page_config(layout="wide", page_title='Materials Management', page_icon='🪙')
 
