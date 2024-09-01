@@ -202,7 +202,7 @@ else:
             
             tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
                 'Reel Label (Small)', 'Reel Label (Large)',
-                'Ink Reels for Label', 'Red Tape', 'Adhesive Tape', 'Cartridges', 'MultiPharma Cartridge'
+                'Ink Reels for Label', 'Red Tape', 'Adhasive Tape', 'Cartridges', 'MultiPharma Cartridge'
             ])
             
             with tab1:
@@ -231,7 +231,7 @@ else:
                 with col4:
                     display_tab('Red Tape', 5)
             with tab5:
-                Adhesive = df_Material[df_Material['Item Name'] == 'Adhesive Tape'].sort_values(by='Item Name')
+                Adhesive = df_Material[df_Material['Item Name'] == 'Adhasive Tape'].sort_values(by='Item Name')
                 st.dataframe(Adhesive, width=2000)
                 col4, col5, col6 = st.columns([2,2,2])
                 with col4:
