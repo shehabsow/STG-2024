@@ -223,7 +223,7 @@ else:
                 st.dataframe(Ink, width=2000)
                 col4, col5, col6 = st.columns([2,1,2])
                 with col4:
-                    display_tab('Ink Reels for Label', 20)
+                    display_tab('Ink', 20)
             with tab4:
                 Tape = df_Material[df_Material['Item Name'] == 'Red Tape'].sort_values(by='Item Name')
                 st.dataframe(Tape, width=2000)
