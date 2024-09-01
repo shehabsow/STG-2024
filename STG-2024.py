@@ -235,7 +235,7 @@ else:
                 st.dataframe(Adhesive, width=2000)
                 col4, col5, col6 = st.columns([2,2,2])
                 with col4:
-                    display_tab('Adhesive Tape', 100)
+                    display_tab('Adhasive Tape', 100)
             with tab6:
                 Cartridges = df_Material[df_Material['Item Name'] == 'Cartridges'].sort_values(by='Item Name')
                 st.dataframe(Cartridges, width=2000)
