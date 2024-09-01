@@ -31,8 +31,12 @@ def save_users(users):
         json.dump(users, f)
 
 # Load logs from files
-def save_logs(logs_df):
-    logs_df.to_csv('logs.csv', index=False)
+def load_logs():
+    try:
+        logs_df = pd.read_csv('logs.csv')
+        st.session_state.logs = logs_df.to_dict('records')
+    except FileNotFoundError:
+        st.session_state.logs = []
 
 def save_alerts(alerts):
     with open('alerts.json', 'w') as f:
@@ -257,6 +261,8 @@ else:
             main()
     elif page == 'View Logs':
         st.header('User Activity Logs')
+        load_logs()  # Load logs when page is changed to 'View Logs'
+
         if st.session_state.logs:
             logs_df = pd.DataFrame(st.session_state.logs)
             st.dataframe(logs_df, width=1000, height=400)
@@ -264,6 +270,5 @@ else:
             st.download_button(label="Download Logs as CSV", data=csv, file_name='user_logs.csv', mime='text/csv')
             if st.button("Clear Logs"):
                 clear_logs()
-        
         else:
             st.write("No logs available.")
