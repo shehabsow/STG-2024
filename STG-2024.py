@@ -255,7 +255,7 @@ else:
 
             st.button("Update page")
             csv = df_Material.to_csv(index=False)
-            st.download_button(label="Download updated sheet", data=csv, file_name='updated.csv', mime='text/csv')
+            st.download_button(label="Download updated sheet", data=csv, file_name='matril.csv', mime='text/csv')
     
         if __name__ == '__main__':
             main()
@@ -267,7 +267,7 @@ else:
             logs_df = pd.DataFrame(st.session_state.logs)
             st.dataframe(logs_df, width=1000, height=400)
             csv = logs_df.to_csv(index=False)
-            st.download_button(label="Download Logs as CSV", data=csv, file_name='user_logs.csv', mime='text/csv')
+            st.download_button(label="Download Logs as CSV", data=csv, file_name='logs.csv', mime='text/csv')
             #if st.button("Clear Logs"):
                 #clear_logs()
         else:
