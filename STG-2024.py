@@ -4,7 +4,8 @@ import pytz
 from datetime import datetime, timedelta
 import json
 import os
-
+from github import Github
+from io import StringIO
 st.set_page_config(
     layout="wide",
     page_title='STG-2024',
@@ -30,67 +31,50 @@ def save_users(users):
     with open('users.json', 'w') as f:
         json.dump(users, f)
 
-# Load logs from files
-def load_logs():
-    try:
-        logs_df = pd.read_csv('logs.csv')
-        st.session_state.logs = logs_df.to_dict('records')
-    except FileNotFoundError:
-        st.session_state.logs = []
 
-def save_alerts(alerts):
-    with open('alerts.json', 'w') as f:
-        json.dump(alerts, f)
-
-# Login function
 def login(username, password):
-    if username in users and users[username]["password"] == password:
+    users = load_users()
+    if username in users and users[username]['password'] == password:
         st.session_state.logged_in = True
         st.session_state.username = username
-        st.session_state.first_login = users[username]["first_login"]
-        last_password_update = datetime.strptime(users[username]["last_password_update"], '%Y-%m-%d %H:%M:%S.%f%z')
-        if datetime.now(egypt_tz) - last_password_update > timedelta(days=30):
-            st.session_state.password_expired = True
-        else:
-            st.session_state.password_expired = False
     else:
-        st.error("Incorrect username or password")
+        st.error("Invalid username or password")
+
 
 # Update quantity function
 def update_quantity(row_index, quantity, operation, username):
     last_month = st.session_state.df.loc[row_index, 'Actual Quantity']
+    
     if operation == 'add':
         st.session_state.df.loc[row_index, 'Actual Quantity'] += quantity
     elif operation == 'subtract':
         st.session_state.df.loc[row_index, 'Actual Quantity'] -= quantity
     new_quantity = st.session_state.df.loc[row_index, 'Actual Quantity']
     st.session_state.df.to_csv('matril.csv', index=False)
-    st.success(f"Quantity updated successfully by {username}! New Quantity: {int(st.session_state.df.loc[row_index, 'Actual Quantity'])}")
+    update_csv_on_github(st.session_state.df, 'matril.csv', "Updated CSV with new quantity")
+    st.success(f"Quantity updated successfully by {username}! New Quantity: {int(new_quantity)}")
+    
     log_entry = {
         'user': username,
-        'time': datetime.now(egypt_tz).strftime('%Y-%m-%d %H:%M:%S'),
+        'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'item': st.session_state.df.loc[row_index, 'Item Name'],
         'last_month': last_month,
         'new_quantity': new_quantity,
         'operation': operation
     }
     st.session_state.logs.append(log_entry)
-    
-    # Save logs to CSV
     logs_df = pd.DataFrame(st.session_state.logs)
     logs_df.to_csv('logs.csv', index=False)
-    
-    # Check quantities and update alerts
-    check_quantities()
 
-def check_quantities():
-    new_alerts = []
-    for index, row in st.session_state.df.iterrows():
-        if row['Actual Quantity'] < 100:  # Change the threshold as needed
-            new_alerts.append(row['Item Name'])
-            
-    st.session_state.alerts = new_alerts
-    save_alerts(st.session_state.alerts)
+    update_csv_on_github(logs_df, 'logs.csv', "Updated logs CSV")
+
+def update_csv_on_github(df, filename, commit_message):
+    g = Github(st.secrets["GITHUB_TOKEN"])
+    repo = g.get_repo(st.secrets["REPO_NAME"])
+    contents = repo.get_contents(filename)
+    csv_buffer = StringIO()
+    df.to_csv(csv_buffer, index=False)
+    repo.update_file(contents.path, commit_message, csv_buffer.getvalue(), contents.sha, branch="main")
 
 # Function to check quantities for each tab and display alerts
 def check_tab_quantities(tab_name, min_quantity):
@@ -103,22 +87,20 @@ def check_tab_quantities(tab_name, min_quantity):
 def display_tab(tab_name, min_quantity):
     st.header(f'{tab_name}')
     row_number = st.number_input(f'Select row number for {tab_name}:', min_value=0, max_value=len(st.session_state.df)-1, step=1, key=f'{tab_name}_row_number')
-    
     st.markdown(f"""
     <div style='font-size: 20px; color: blue;'>Selected Item: {st.session_state.df.loc[row_number, 'Item Name']}</div>
     <div style='font-size: 20px; color: blue;'>Current Quantity: {int(st.session_state.df.loc[row_number, 'Actual Quantity'])}</div>
     """, unsafe_allow_html=True)
-    
     quantity = st.number_input(f'Enter quantity for {tab_name}:', min_value=1, step=1, key=f'{tab_name}_quantity')
     operation = st.radio(f'Choose operation for {tab_name}:', ('add', 'subtract'), key=f'{tab_name}_operation')
-
     if st.button('Update Quantity', key=f'{tab_name}_update_button'):
         update_quantity(row_number, quantity, operation, st.session_state.username)
-    
+
     tab_alerts, df_tab = check_tab_quantities(tab_name, min_quantity)
     if tab_alerts:
         st.error(f"Low stock for items in {tab_name}:")
         st.dataframe(df_tab.style.applymap(lambda x: 'background-color: red' if x < min_quantity else '', subset=['Actual Quantity']))
+
 
 def clear_logs():
     st.session_state.logs = []
