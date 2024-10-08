@@ -243,13 +243,14 @@ else:
             main()
     elif page == 'View Logs':
         st.header('User Activity Logs')
-        load_logs()  # Load logs when page is changed to 'View Logs'
-
-        if st.session_state.logs:
-            logs_df = pd.DataFrame(st.session_state.logs)
-            st.dataframe(logs_df, width=1000, height=400)
-            csv = logs_df.to_csv(index=False)
-            st.download_button(label="Download Logs as CSV", data=csv, file_name='logs.csv', mime='text/csv')
+        load_logs()
+        st.header("View Logs")
+        logs_df = pd.DataFrame(st.session_state.logs)
+        st.dataframe(logs_df)
+        logs_df = pd.DataFrame(st.session_state.logs)
+        st.dataframe(logs_df, width=1000, height=400)
+        csv = logs_df.to_csv(index=False)
+        st.download_button(label="Download Logs as CSV", data=csv, file_name='logs.csv', mime='text/csv')
             #if st.button("Clear Logs"):
                 #clear_logs()
         else:
