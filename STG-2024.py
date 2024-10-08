@@ -100,7 +100,7 @@ def check_tab_quantities(tab_name, min_quantity):
 # Function to display each tab
 def display_tab(tab_name, min_quantity):
     st.header(f'{tab_name}')
-    
+    st.session_state.df['Actual Quantity'] = st.session_state.df['Actual Quantity'].astype(int)
     # إظهار العنصر المحدد في التاب
     df_tab = st.session_state.df[st.session_state.df['Item Name'] == tab_name]
     
