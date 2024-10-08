@@ -1,9 +1,9 @@
 Item Name,Actual Quantity,Monthly Consumption,"Coverage
 (in Month)"
-Reel Label (Small),218,10.0,20
-Reel Label (Large),199,20.0,60
-Ink Reels for Label,111,10.0,20
-Red Tape,35,1.0,5
-Adhasive Tape,52,20.0,100
-Cartridges,633,45.0,50
-MultiPharma Cartridge,7,2.0,5
+Reel Label (Small),218,10,20
+Reel Label (Large),199,20,60
+Ink Reels for Label,111,10,20
+Red Tape,5,1,5
+Adhasive Tape,52,20,100
+Cartridges,633,45,50
+MultiPharma Cartridge,7,2,5
