@@ -243,8 +243,6 @@ else:
             main()
     elif page == 'View Logs':
         st.header('User Activity Logs')
-        load_logs()
-        st.header("View Logs")
         logs_df = pd.DataFrame(st.session_state.logs)
         st.dataframe(logs_df)
         logs_df = pd.DataFrame(st.session_state.logs)
@@ -253,5 +251,3 @@ else:
         st.download_button(label="Download Logs as CSV", data=csv, file_name='logs.csv', mime='text/csv')
             #if st.button("Clear Logs"):
                 #clear_logs()
-        else:
-            st.write("No logs available.")
