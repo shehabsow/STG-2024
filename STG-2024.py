@@ -67,7 +67,7 @@ def update_quantity(item_name, quantity, operation, username):
     # حفظ سجل التعديلات
     log_entry = {
         'user': username,
-        'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'time':  datetime.now(egypt_tz).strftime("%Y-%m-%d %H:%M:%S"),
         'item': item_name,
         'last_month': last_month,
         'new_quantity': new_quantity,
