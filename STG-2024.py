@@ -42,30 +42,44 @@ def login(username, password):
 
 
 # Update quantity function
-def update_quantity(row_index, quantity, operation, username):
+def update_quantity(item_name, quantity, operation, username):
+    # العثور على الصف الذي يتوافق مع اسم العنصر
+    row_index = st.session_state.df[st.session_state.df['Item Name'] == item_name].index[0]
+    
     last_month = st.session_state.df.loc[row_index, 'Actual Quantity']
     
     if operation == 'add':
         st.session_state.df.loc[row_index, 'Actual Quantity'] += quantity
     elif operation == 'subtract':
         st.session_state.df.loc[row_index, 'Actual Quantity'] -= quantity
+    
     new_quantity = st.session_state.df.loc[row_index, 'Actual Quantity']
+    
+    # حفظ التغييرات في CSV
     st.session_state.df.to_csv('matril.csv', index=False)
+    
+    # تحديث الملف على GitHub
     update_csv_on_github(st.session_state.df, 'matril.csv', "Updated CSV with new quantity")
+    
+    # إظهار رسالة نجاح
     st.success(f"Quantity updated successfully by {username}! New Quantity: {int(new_quantity)}")
     
+    # حفظ سجل التعديلات
     log_entry = {
         'user': username,
         'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'item': st.session_state.df.loc[row_index, 'Item Name'],
+        'item': item_name,
         'last_month': last_month,
         'new_quantity': new_quantity,
         'operation': operation
     }
     st.session_state.logs.append(log_entry)
+    
+    # حفظ السجل في CSV
     logs_df = pd.DataFrame(st.session_state.logs)
     logs_df.to_csv('logs.csv', index=False)
-
+    
+    # تحديث ملف السجلات على GitHub
     update_csv_on_github(logs_df, 'logs.csv', "Updated logs CSV")
 
 def update_csv_on_github(df, filename, commit_message):
@@ -86,16 +100,25 @@ def check_tab_quantities(tab_name, min_quantity):
 # Function to display each tab
 def display_tab(tab_name, min_quantity):
     st.header(f'{tab_name}')
-    row_number = st.number_input(f'Select row number for {tab_name}:', min_value=0, max_value=len(st.session_state.df)-1, step=1, key=f'{tab_name}_row_number')
+    
+    # إظهار العنصر المحدد في التاب
+    df_tab = st.session_state.df[st.session_state.df['Item Name'] == tab_name]
+    
+    # إظهار معلومات العنصر الحالي
     st.markdown(f"""
-    <div style='font-size: 20px; color: blue;'>Selected Item: {st.session_state.df.loc[row_number, 'Item Name']}</div>
-    <div style='font-size: 20px; color: blue;'>Current Quantity: {int(st.session_state.df.loc[row_number, 'Actual Quantity'])}</div>
+    <div style='font-size: 20px; color: blue;'>Selected Item: {df_tab['Item Name'].values[0]}</div>
+    <div style='font-size: 20px; color: blue;'>Current Quantity: {int(df_tab['Actual Quantity'].values[0])}</div>
     """, unsafe_allow_html=True)
+    
+    # إدخال الكمية والعملية
     quantity = st.number_input(f'Enter quantity for {tab_name}:', min_value=1, step=1, key=f'{tab_name}_quantity')
     operation = st.radio(f'Choose operation for {tab_name}:', ('add', 'subtract'), key=f'{tab_name}_operation')
-    if st.button('Update Quantity', key=f'{tab_name}_update_button'):
-        update_quantity(row_number, quantity, operation, st.session_state.username)
 
+    # تحديث الكمية عند الضغط على الزر
+    if st.button('Update Quantity', key=f'{tab_name}_update_button'):
+        update_quantity(tab_name, quantity, operation, st.session_state.username)
+
+    # عرض التحذيرات إذا كانت الكميات منخفضة
     tab_alerts, df_tab = check_tab_quantities(tab_name, min_quantity)
     if tab_alerts:
         st.error(f"Low stock for items in {tab_name}:")
